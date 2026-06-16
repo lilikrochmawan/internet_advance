@@ -56,10 +56,16 @@ class AdminPengaturanController extends Controller
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
             $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
-            $file->move(base_path('images'), $filename);
+            
+            $uploadDir = public_path('images');
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
+            $file->move($uploadDir, $filename);
 
-            if ($profile && !empty($profile->foto) && $profile->foto !== 'ion.png' && file_exists(base_path('images/' . $profile->foto))) {
-                @unlink(base_path('images/' . $profile->foto));
+            if ($profile && !empty($profile->foto) && $profile->foto !== 'ion.png' && file_exists(public_path('images/' . $profile->foto))) {
+                @unlink(public_path('images/' . $profile->foto));
             }
         }
 

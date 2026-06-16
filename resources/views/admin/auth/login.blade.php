@@ -226,8 +226,8 @@
     <div class="login-container">
         <div class="login-hero">
             <div class="login-logo" style="overflow: hidden; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25);">
-                @if(!empty($profile->foto) && file_exists(base_path('images/' . $profile->foto)))
-                    <img src="{{ asset('../images/' . $profile->foto) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 10px;">
+                @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
+                    <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 10px;">
                 @else
                     <i class="fa-solid fa-user-shield"></i>
                 @endif

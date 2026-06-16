@@ -254,10 +254,10 @@
             <div class="form-group">
                 <label for="logo">Logo  (Format: PNG, JPG, JPEG - Maks. 2MB)</label>
                 <div style="display:flex; align-items:center; gap:16px; margin-top:6px;">
-                    @if(!empty($profile->foto) && file_exists(base_path('images/' . $profile->foto)))
-                        <img id="logo-preview" src="{{ asset('../images/' . $profile->foto) }}?v={{ time() }}" alt="Logo Usaha" style="width:70px; height:70px; object-fit:contain; border-radius:12px; border:1px solid var(--border-color); padding: 4px; background: #fafafa;">
+                    @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
+                        <img id="logo-preview" src="{{ asset('images/' . $profile->foto) }}?v={{ time() }}" alt="Logo Usaha" style="width:70px; height:70px; object-fit:contain; border-radius:12px; border:1px solid var(--border-color); padding: 4px; background: #fafafa;">
                     @else
-                        <img id="logo-preview" src="{{ asset('../images/ion.png') }}" alt="Default Logo" style="width:70px; height:70px; object-fit:contain; border-radius:12px; border:1px solid var(--border-color); padding: 4px; background: #fafafa;">
+                        <img id="logo-preview" src="{{ asset('images/ion.png') }}" alt="Default Logo" style="width:70px; height:70px; object-fit:contain; border-radius:12px; border:1px solid var(--border-color); padding: 4px; background: #fafafa;">
                     @endif
                     <input type="file" id="logo" name="logo" class="form-control" accept="image/*" style="padding: 8px 12px; height: auto;" onchange="previewImage(this)">
                 </div>

@@ -868,8 +868,8 @@
     <!-- Sidebar Menu -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-brand" style="gap: 10px;">
-            @if(!empty($profile->foto) && file_exists(base_path('images/' . $profile->foto)))
-                <img src="{{ asset('../images/' . $profile->foto) }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.15); padding: 2px;">
+            @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
+                <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.15); padding: 2px;">
             @else
                 <i class="fa-solid fa-wifi"></i>
             @endif

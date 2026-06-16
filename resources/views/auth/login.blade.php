@@ -459,10 +459,10 @@
             <!-- Card Header -->
             <div class="brand-header">
                 <div class="brand-logo">
-                    @if(!empty($profile->foto) && file_exists(base_path('images/' . $profile->foto)))
-                        <img src="{{ asset('../images/' . $profile->foto) }}" alt="Logo">
+                    @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
+                        <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo">
                     @else
-                        <img src="{{ asset('../images/ion.png') }}" alt="Logo">
+                        <img src="{{ asset('images/ion.png') }}" alt="Logo">
                     @endif
                 </div>
                 <div class="brand-title">{{ $profile->nama_sekolah ?? 'INDOTEL' }}</div>
