@@ -130,6 +130,7 @@ class SendAutoBillingNotifications extends Command
             $pesan = str_replace('$no_telp', $pelanggan->no_telp, $pesan);
             $pesan = str_replace('$jatuh_tempo', Carbon::parse($tx->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo, $pesan);
             $pesan = str_replace('$tagihan', number_format($tx->jml_bayar, 0, ',', '.'), $pesan);
+            $pesan = str_replace('$hari_ini', Carbon::now()->translatedFormat('d F Y'), $pesan);
 
             try {
                 $response = Http::timeout(10)->withHeaders([

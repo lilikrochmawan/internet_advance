@@ -133,6 +133,7 @@
                     <li><span class="helper-tag">$no_telp</span> : No Telepon Pelanggan</li>
                     <li><span class="helper-tag">$jatuh_tempo</span> : Tanggal Jatuh Tempo</li>
                     <li><span class="helper-tag">$tagihan</span> : Jumlah Nominal Tagihan</li>
+                    <li><span class="helper-tag">$hari_ini</span> : Tanggal Hari Ini</li>
                 </ul>
             </div>
 
