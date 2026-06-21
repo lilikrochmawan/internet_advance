@@ -365,7 +365,101 @@ class AdminPelangganController extends Controller
             'nama_user' => $nama,
         ]);
 
-        return redirect()->route('admin.pelanggan.index')->with('success', 'Detail pelanggan berhasil diubah!');
+        // Sync package change to Mikrotik if package changed and Mikrotik integration is active
+        $mikrotikMessage = '';
+        $oldPaketId = $pelanggan->paket;
+        $paketChanged = intval($oldPaketId) !== intval($paketId);
+
+        if ($paketChanged) {
+            $user = User::where('id_pelanggan', $id)->first();
+            $checkUser = DB::table('tbl_penggunamikrotik')->first();
+            if ($checkUser && $checkUser->addppsecret == 'ya' && $user) {
+                $paket = Paket::find($paketId);
+                $id_profile = $paket ? $paket->id_pmikrotik : '';
+
+                if ($id_profile) {
+                    $mikrotik = DB::table('tbl_mikrotik')->where('id_mikrotik', $id_mikrotik)->first();
+                    if ($mikrotik) {
+                        require_once base_path('include/routeros_api.php');
+                        $API = new \RouterosAPI();
+                        if ($API->connect($mikrotik->ip, $mikrotik->username, $mikrotik->password)) {
+                            // 1. Update secret profile
+                            $secrets = $API->comm('/ppp/secret/print', ['?name' => $user->username]);
+                            if (!empty($secrets)) {
+                                $API->comm('/ppp/secret/set', [
+                                    '.id' => $secrets[0]['.id'],
+                                    'profile' => $id_profile
+                                ]);
+                            } else {
+                                $API->comm('/ppp/secret/add', [
+                                    'name' => $user->username,
+                                    'password' => $user->password,
+                                    'service' => 'pppoe',
+                                    'profile' => $id_profile
+                                ]);
+                            }
+
+                            // 2. Disconnect active connection
+                            $activeConnections = $API->comm('/ppp/active/print', ['?name' => $user->username]);
+                            if (!empty($activeConnections)) {
+                                foreach ($activeConnections as $connection) {
+                                    $API->comm('/ppp/active/remove', [
+                                        '.id' => $connection['.id']
+                                    ]);
+                                }
+                            }
+                            $API->disconnect();
+                        } else {
+                            $mikrotikMessage = ' Namun, gagal terhubung ke router Mikrotik untuk memperbarui profil PPPoE.';
+                        }
+                    } else {
+                        $mikrotikMessage = ' Namun, konfigurasi router Mikrotik tidak ditemukan.';
+                    }
+                }
+            }
+
+            // Adjust unpaid monthly bill/invoice for the current month
+            $currentMonth = date('mY');
+            $unpaidTagihan = DB::table('tb_tagihan')
+                ->where('id_pelanggan', $id)
+                ->where('bulan_tahun', $currentMonth)
+                ->where(function ($q) {
+                    $q->whereNull('status_bayar')
+                      ->orWhereIn('status_bayar', [0, '0', 'belum', '']);
+                })
+                ->where(function ($q) {
+                    $q->where('manual_invoice', 0)
+                      ->orWhereNull('manual_invoice');
+                })
+                ->first();
+
+            if ($unpaidTagihan) {
+                // Calculate new bill amount (taking into account the PPN settings)
+                $ppn_aktif = false;
+                $paketSettings = DB::table('tbl_paketmikrotik')->first();
+                if ($paketSettings && isset($paketSettings->ppn) && $paketSettings->ppn === 'aktif') {
+                    $ppn_aktif = true;
+                }
+
+                $newPaket = Paket::find($paketId);
+                $harga_paket = $newPaket ? $newPaket->harga : 0;
+                $ppn_rate = $newPaket ? $newPaket->ppn : 0;
+
+                if ($ppn_aktif) {
+                    $newJmlBayar = $harga_paket + ($harga_paket * $ppn_rate);
+                } else {
+                    $newJmlBayar = $harga_paket;
+                }
+
+                DB::table('tb_tagihan')
+                    ->where('id_tagihan', $unpaidTagihan->id_tagihan)
+                    ->update(['jml_bayar' => $newJmlBayar]);
+
+                $mikrotikMessage .= ' Tagihan bulan ini yang belum terbayar juga telah disesuaikan dengan nominal paket baru.';
+            }
+        }
+
+        return redirect()->route('admin.pelanggan.index')->with('success', 'Detail pelanggan berhasil diubah!' . $mikrotikMessage);
     }
 
     public function destroy(Request $request)

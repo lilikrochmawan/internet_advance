@@ -523,7 +523,7 @@
                 </form>
 
                 <div class="app-footer">
-                    Version 8.1 • &copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'Indotel' }}
+                    &copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'BILLING INTERNET' }}. Version 2.0 | By Lotus Computama Teknik. (Dilindungi hak cipta)
                 </div>
             </div>
 

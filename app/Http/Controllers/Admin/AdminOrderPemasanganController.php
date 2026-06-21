@@ -21,7 +21,7 @@ class AdminOrderPemasanganController extends Controller
         $user = Auth::user();
 
         // Fetch options for the approval modal (Admin only)
-        $pakets = [];
+        $pakets = Paket::all();
         $mikrotiks = [];
         $odps = [];
         $branches = [];
@@ -30,9 +30,8 @@ class AdminOrderPemasanganController extends Controller
         $topTeknisi = [];
 
         if ($user->level === 'admin') {
-            $pakets = Paket::all();
             $mikrotiks = DB::table('tbl_mikrotik')->get();
-            $odps = Odp::all();
+            $odps = Odp::withCount('pelanggans')->get();
             $branches = DB::table('tb_branch')->get();
             $subBranches = DB::table('tb_sub_branch')->get();
             $teknisis = User::where('level', 'teknisi')->get()->map(function($tek) {
@@ -60,13 +59,13 @@ class AdminOrderPemasanganController extends Controller
         // Fetch orders based on role
         if ($user->level === 'sales') {
             // Sales sees only their own uploaded orders
-            $orders = OrderPemasangan::with(['sales', 'teknisi'])
+            $orders = OrderPemasangan::with(['sales', 'teknisi', 'paketDetail'])
                 ->where('id_sales', $user->id)
                 ->orderBy('id', 'desc')
                 ->get();
         } elseif ($user->level === 'teknisi') {
             // Technician sees orders assigned to them or assigned to All (0) that are approved or installed
-            $orders = OrderPemasangan::with(['sales', 'teknisi'])
+            $orders = OrderPemasangan::with(['sales', 'teknisi', 'paketDetail'])
                 ->where(function($q) use ($user) {
                     $q->where('id_teknisi', $user->id)
                       ->orWhere('id_teknisi', 0);
@@ -76,7 +75,7 @@ class AdminOrderPemasanganController extends Controller
                 ->get();
         } else {
             // Admin and others see all orders
-            $orders = OrderPemasangan::with(['sales', 'teknisi'])
+            $orders = OrderPemasangan::with(['sales', 'teknisi', 'paketDetail'])
                 ->orderBy('id', 'desc')
                 ->get();
         }
@@ -92,6 +91,7 @@ class AdminOrderPemasanganController extends Controller
             'nik' => 'required|string|max:50',
             'nama' => 'required|string|max:255',
             'no_telp' => 'required|string|max:20',
+            'paket' => 'required|integer|exists:tb_paket,id_paket',
             'alamat_ktp' => 'required|string',
             'alamat_pemasangan' => 'required|string',
             'koordinat_pemasangan' => 'required|string|max:100',
@@ -101,6 +101,7 @@ class AdminOrderPemasanganController extends Controller
             'foto_ktp.required' => 'Foto KTP wajib diunggah.',
             'foto_ktp.image' => 'File harus berupa gambar.',
             'foto_ktp.max' => 'Ukuran file maksimal 5 MB.',
+            'paket.required' => 'Paket internet wajib dipilih.',
         ]);
 
         $fotoName = '';
@@ -127,6 +128,7 @@ class AdminOrderPemasanganController extends Controller
             'nik' => htmlspecialchars(strip_tags($request->nik)),
             'nama' => htmlspecialchars(strip_tags($request->nama)),
             'no_telp' => htmlspecialchars(strip_tags($request->no_telp)),
+            'paket' => intval($request->paket),
             'alamat_ktp' => htmlspecialchars(strip_tags($request->alamat_ktp)),
             'alamat_pemasangan' => htmlspecialchars(strip_tags($request->alamat_pemasangan)),
             'koordinat_pemasangan' => htmlspecialchars(strip_tags($request->koordinat_pemasangan)),
@@ -320,6 +322,9 @@ class AdminOrderPemasanganController extends Controller
                 $pesan = str_replace('$alamat', $order->alamat_pemasangan, $pesan);
                 $pesan = str_replace('$no_telp', $no_telp, $pesan);
                 $pesan = str_replace('$paket', $namaPaket, $pesan);
+                $pesan = str_replace('$tgl_pemasangan', $tgl_pemasangan, $pesan);
+                $pesan = str_replace('$username', $username, $pesan);
+                $pesan = str_replace('$password', $password, $pesan);
 
                 $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->first();
                 if ($tokenInfo && !empty($tokenInfo->token)) {

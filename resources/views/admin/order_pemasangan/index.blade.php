@@ -358,10 +358,20 @@
                     @forelse($orders as $index => $row)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>
+                             <td>
                                 <strong>{{ $row->nama }}</strong><br>
                                 <span style="font-size: 0.8rem; color: var(--text-gray);">NIK: {{ $row->nik }}</span><br>
-                                <span style="font-size: 0.8rem; color: var(--text-gray);">Telp: {{ $row->no_telp ?? '-' }}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-gray);">Telp: {{ $row->no_telp ?? '-' }}</span><br>
+                                <span style="font-size: 0.8rem; color: var(--text-gray);">
+                                    <strong>Paket Diminta:</strong> 
+                                    @if($row->paketDetail)
+                                        <span class="badge" style="background-color: #f1f5f9; color: #4f46e5; border: 1px solid #e2e8f0; font-size: 0.75rem; font-weight: bold; padding: 2px 6px; border-radius: 4px;">
+                                            {{ $row->paketDetail->nama_paket }}
+                                        </span>
+                                    @else
+                                        <span style="color:#dc2626; font-style:italic;">Belum Pilih Paket</span>
+                                    @endif
+                                </span>
                             </td>
                             <td>
                                 <strong style="font-size: 0.8rem;">KTP:</strong> <span style="font-size: 0.8rem;">{{ $row->alamat_ktp }}</span><br>
@@ -570,6 +580,18 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="paket_order">Paket Internet Yang Diminta *</label>
+                        <select id="paket_order" name="paket" class="form-control" required>
+                            <option value="">-- Pilih Paket --</option>
+                            @foreach($pakets as $p)
+                                <option value="{{ $p->id_paket }}" {{ old('paket') == $p->id_paket ? 'selected' : '' }}>
+                                    {{ $p->nama_paket }} (Rp {{ number_format($p->harga, 0, ',', '.') }} / Bulan)
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label for="alamat_ktp">Alamat KTP *</label>
                         <textarea id="alamat_ktp" name="alamat_ktp" class="form-control" rows="2" required placeholder="Alamat lengkap sesuai KTP">{{ old('alamat_ktp') }}</textarea>
                     </div>
@@ -706,7 +728,12 @@
                     <select id="odp" name="odp" class="form-control">
                         <option value="">-- Pilih ODP (Opsional) --</option>
                         @foreach($odps as $o)
-                            <option value="{{ $o->id_odp }}">{{ $o->nama_odp }} (Port: {{ $o->port_odp }})</option>
+                            @php
+                                $remaining = $o->port_odp - ($o->pelanggans_count ?? 0);
+                            @endphp
+                            <option value="{{ $o->id_odp }}" {{ $remaining <= 0 ? 'disabled style=color:var(--text-gray);' : '' }}>
+                                {{ $o->nama_odp }} (Sisa Port: {{ $remaining }} / {{ $o->port_odp }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -935,6 +962,14 @@
         document.getElementById('password').value = Math.floor(100000 + Math.random() * 900000);
         
         document.getElementById('no_telp_approve').value = order.no_telp || '';
+        
+        // Pre-select the requested package
+        if (order.paket) {
+            document.getElementById('paket').value = order.paket;
+        } else {
+            document.getElementById('paket').value = '';
+        }
+
         document.getElementById('approveModal').classList.add('active');
     }
 

@@ -164,6 +164,7 @@ Route::prefix('administrator')->group(function () {
         Route::post('/tr069/reboot', [AdminAcsController::class, 'reboot'])->name('admin.tr069.reboot');
         Route::post('/tr069/parameters', [AdminAcsController::class, 'setParameters'])->name('admin.tr069.parameters');
         Route::post('/tr069/connection-request', [AdminAcsController::class, 'triggerConnectionRequest'])->name('admin.tr069.cr');
+        Route::post('/tr069/delete', [AdminAcsController::class, 'destroy'])->name('admin.tr069.destroy');
 
         // Custom Pesan WhatsApp Templates
         Route::get('/custom-pesan', [AdminCustomPesanController::class, 'index'])->name('admin.custom_pesan.index');

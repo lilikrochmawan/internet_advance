@@ -394,9 +394,18 @@
                             @endif
                         </td>
                         <td style="text-align: center;">
-                            <a href="{{ route('admin.tr069.detail', $row->id_cpe) }}" class="btn btn-xs btn-primary">
-                                <i class="fa-solid fa-gears"></i> Kelola CPE
-                            </a>
+                            <div style="display:inline-flex; gap:6px; justify-content:center;">
+                                <a href="{{ route('admin.tr069.detail', $row->id_cpe) }}" class="btn btn-xs btn-primary" title="Kelola CPE">
+                                    <i class="fa-solid fa-gears"></i> Kelola CPE
+                                </a>
+                                <form action="{{ route('admin.tr069.destroy') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus perangkat CPE dengan Serial Number {{ $row->serial_number }}?')">
+                                    @csrf
+                                    <input type="hidden" name="id_cpe" value="{{ $row->id_cpe }}">
+                                    <button type="submit" class="btn btn-xs btn-danger" title="Hapus Perangkat">
+                                        <i class="fa-solid fa-trash"></i> Hapus
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

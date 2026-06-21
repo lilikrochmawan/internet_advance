@@ -17,7 +17,12 @@ class AdminKasController extends Controller
         $total_keluar = DB::table('tb_kas')->sum('pengeluaran') ?? 0;
         $saldo = $total_masuk - $total_keluar;
 
-        return view('admin.kas.index', compact('kas', 'total_masuk', 'total_keluar', 'saldo'));
+        $pemasukan_bulan_ini = DB::table('tb_kas')
+            ->whereMonth('tgl_kas', Carbon::now()->month)
+            ->whereYear('tgl_kas', Carbon::now()->year)
+            ->sum('penerimaan') ?? 0;
+
+        return view('admin.kas.index', compact('kas', 'total_masuk', 'total_keluar', 'saldo', 'pemasukan_bulan_ini'));
     }
 
     public function store(Request $request)

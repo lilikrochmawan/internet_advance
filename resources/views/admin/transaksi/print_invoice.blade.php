@@ -363,9 +363,7 @@
         <!-- Header -->
         <div class="header">
             <div class="company-logo">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-wifi"></i>
-                </div>
+                <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo" style="width: 45px; height: 45px; object-fit: contain; border-radius: 12px; background: rgba(0,0,0,0.03); padding: 2px;">
                 <div>
                     <span class="company-name">{{ $profile->nama_sekolah ?? 'Indotel Billing' }}</span>
                     <div style="font-size: 0.8rem; color: var(--text-gray); font-weight: 500; margin-top: 2px;">INTERNET SERVICE PROVIDER</div>

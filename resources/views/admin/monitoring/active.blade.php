@@ -550,6 +550,12 @@
             </div>
 
             <div class="form-group">
+                <label for="nat_remote_host">Domain/IP Publik Remote ONT <span style="color:#ef4444;">*</span></label>
+                <input type="text" name="remote_host" id="nat_remote_host" class="form-control" placeholder="Contoh: rmtsg3.perwiramedia.com" required>
+                <small style="color: var(--text-gray); font-size: 0.75rem;">Domain DDNS atau IP Publik yang diarahkan ke ONT (contoh: rmtsg3.perwiramedia.com)</small>
+            </div>
+
+            <div class="form-group">
                 <label for="nat_dst_port">Dst. Port (Port Publik Router) <span style="color:#ef4444;">*</span></label>
                 <input type="text" name="dst_port" id="nat_dst_port" class="form-control" placeholder="Contoh: 8063" required>
                 <small style="color: var(--text-gray); font-size: 0.75rem;">Port luar yang diakses (misal: http://ip-publik:8063)</small>
@@ -593,6 +599,7 @@
         const natLoading = document.getElementById("natSettingsLoading");
         const natForm = document.getElementById("natSettingsForm");
         const natProtocol = document.getElementById("nat_protocol");
+        const natRemoteHost = document.getElementById("nat_remote_host");
         const natDstPort = document.getElementById("nat_dst_port");
         const natToPorts = document.getElementById("nat_to_ports");
         const natInInterface = document.getElementById("nat_in_interface");
@@ -623,26 +630,37 @@
                     method: "POST",
                     headers: {
                         "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                        "Content-Type": "application/x-www-form-urlencoded"
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Accept": "application/json"
                     },
                     body: params
                 })
-                .then(r => r.json())
+                .then(async r => {
+                    const contentType = r.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const data = await r.json();
+                        return { ok: r.ok, status: r.status, data };
+                    } else {
+                        const text = await r.text();
+                        return { ok: false, status: r.status, errorText: text };
+                    }
+                })
                 .then(res => {
                     loadingOverlay.style.display = "none";
-                    if (res.success) {
+                    if (res.ok && res.data && res.data.success) {
                         // Load the verified ONT remote URL into the opened tab
-                        newTab.location.href = res.url;
+                        newTab.location.href = res.data.url;
                     } else {
                         newTab.close();
-                        alert("Gagal melakukan remote ONT: " + res.message);
+                        const errMsg = res.data ? res.data.message : (res.errorText || "Respon server tidak valid");
+                        alert("Gagal melakukan remote ONT: " + errMsg);
                     }
                 })
                 .catch(err => {
                     loadingOverlay.style.display = "none";
                     newTab.close();
                     alert("Terjadi kesalahan jaringan atau server saat melakukan port forwarding.");
-                    console.error(err);
+                    console.error("Fetch/URL Error:", err);
                 });
             });
         });
@@ -660,6 +678,7 @@
                     if (res.success) {
                         // Populate form
                         natProtocol.value = res.rule.protocol || 'tcp';
+                        natRemoteHost.value = res.remote_host || 'rmtsg3.perwiramedia.com';
                         natDstPort.value = res.rule.dst_port || '8063';
                         natToPorts.value = res.rule.to_ports || '80';
 
@@ -698,6 +717,7 @@
             const params = new URLSearchParams();
             params.append('device_id', deviceId);
             params.append('protocol', natProtocol.value);
+            params.append('remote_host', natRemoteHost.value);
             params.append('dst_port', natDstPort.value);
             params.append('to_ports', natToPorts.value);
             params.append('in_interface', natInInterface.value);

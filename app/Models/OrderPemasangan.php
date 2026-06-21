@@ -16,6 +16,7 @@ class OrderPemasangan extends Model
         'nik',
         'nama',
         'no_telp',
+        'paket',
         'alamat_ktp',
         'alamat_pemasangan',
         'koordinat_pemasangan',
@@ -26,6 +27,14 @@ class OrderPemasangan extends Model
         'id_sales',
         'id_teknisi',
     ];
+
+    /**
+     * Relationship: Order belongs to a Package
+     */
+    public function paketDetail()
+    {
+        return $this->belongsTo(Paket::class, 'paket', 'id_paket');
+    }
 
     /**
      * Relationship: Order belongs to Sales (User)

@@ -300,6 +300,32 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Gauge / RX Power Styles */
+        .client-gauge-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .client-gauge-svg {
+            width: 150px;
+            height: 95px;
+        }
+
+        .client-gauge-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .client-gauge-status {
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -377,14 +403,44 @@
                             @if(!empty($cpe->rx_power))
                                 @php
                                     $numericPower = (float) filter_var($cpe->rx_power, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-                                    $color = '#4ade80';
-                                    if ($numericPower < -27 || $numericPower > -8) {
-                                        $color = '#f87171';
+                                    
+                                    // Clamp to range -30 to -10 for needle percentage calculation
+                                    $clampedPower = max(-30, min(-10, $numericPower));
+                                    $percent = ($clampedPower - (-30)) / 20;
+                                    $needleAngle = -90 + ($percent * 180);
+
+                                    $color = '#4ade80'; // normal green
+                                    $statusText = 'Normal Good';
+                                    if ($numericPower < -27 || $numericPower > -11) {
+                                        $color = '#f87171'; // critical red
+                                        $statusText = 'Critical';
                                     } elseif ($numericPower < -24) {
-                                        $color = '#fb923c';
+                                        $color = '#fb923c'; // warning orange
+                                        $statusText = 'Low Signal';
                                     }
                                 @endphp
-                                <span style="color: {{ $color }}; font-weight: bold;">{{ $cpe->rx_power }}</span>
+                                <div class="client-gauge-wrapper">
+                                    <svg viewBox="0 0 200 120" class="client-gauge-svg">
+                                        <!-- Background Arc -->
+                                        <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="12" stroke-linecap="round" />
+                                        
+                                        <!-- Segments: -30 to -27 (Danger/Red), -27 to -24 (Warning/Yellow), -24 to -13 (Success/Green), -13 to -11 (Warning/Orange), -11 to -10 (Danger/Red) -->
+                                        <path d="M20,100 A80,80 0 0,1 28.7,63.7" fill="none" stroke="#ef4444" stroke-width="12" />
+                                        <path d="M28.7,63.7 A80,80 0 0,1 53,35.3" fill="none" stroke="#eab308" stroke-width="12" />
+                                        <path d="M53,35.3 A80,80 0 0,1 171.3,63.7" fill="none" stroke="#10b981" stroke-width="12" />
+                                        <path d="M171.3,63.7 A80,80 0 0,1 179,87.5" fill="none" stroke="#f97316" stroke-width="12" />
+                                        <path d="M179,87.5 A80,80 0 0,1 180,100" fill="none" stroke="#ef4444" stroke-width="12" />
+                                        
+                                        <!-- Needle -->
+                                        <g id="client-gauge-needle" style="transform: rotate({{ $needleAngle }}deg); transform-origin: 100px 100px; transition: transform 1s ease-in-out;">
+                                            <polygon points="97,100 100,20 103,100" fill="#f8fafc" />
+                                            <circle cx="100" cy="100" r="6" fill="#f8fafc" />
+                                        </g>
+                                    </svg>
+                                    <div class="client-gauge-value" style="color: {{ $color }};">{{ $cpe->rx_power }}</div>
+                                    <div class="client-gauge-status" style="color: {{ $color }}; font-weight: bold;">{{ $statusText }}</div>
+                                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">Range: -30 ~ -10 dBm</div>
+                                </div>
                             @else
                                 <span style="color: #94a3b8; font-style: italic;">Tidak ada data</span>
                             @endif

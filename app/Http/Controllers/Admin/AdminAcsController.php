@@ -91,12 +91,20 @@ class AdminAcsController extends Controller
     {
         $cpe = DB::table('tb_cpe')
             ->leftJoin('tb_pelanggan', 'tb_cpe.id_pelanggan', '=', 'tb_pelanggan.id_pelanggan')
-            ->select('tb_cpe.*', 'tb_pelanggan.nama_pelanggan')
+            ->select('tb_cpe.*', 'tb_pelanggan.nama_pelanggan', 'tb_pelanggan.kode_pelanggan', 'tb_pelanggan.alamat', 'tb_pelanggan.odp')
             ->where('tb_cpe.id_cpe', $id)
             ->first();
 
         if (!$cpe) {
             abort(404, 'Perangkat tidak ditemukan.');
+        }
+
+        $odpName = '-';
+        if ($cpe->odp) {
+            $odp = DB::table('tbl_odp')->where('id_odp', $cpe->odp)->first();
+            if ($odp) {
+                $odpName = $odp->nama_odp;
+            }
         }
 
         $queue = DB::table('tb_acs_queue')
@@ -106,8 +114,7 @@ class AdminAcsController extends Controller
             ->limit(100)
             ->get();
 
-
-        return view('admin.tr069.detail', compact('cpe', 'queue'));
+        return view('admin.tr069.detail', compact('cpe', 'queue', 'odpName'));
     }
 
     public function triggerConnectionRequest(Request $request)
@@ -256,5 +263,25 @@ class AdminAcsController extends Controller
         }
 
         return redirect()->route('admin.tr069.detail', $cpe->id_cpe)->withErrors(['error' => 'Harap masukkan nilai parameter yang valid.']);
+    }
+
+    public function destroy(Request $request)
+    {
+        $request->validate([
+            'id_cpe' => 'required|integer',
+        ]);
+
+        $cpe = DB::table('tb_cpe')->where('id_cpe', $request->id_cpe)->first();
+        if (!$cpe) {
+            return back()->withErrors(['error' => 'Perangkat tidak ditemukan.']);
+        }
+
+        // Delete from queue first
+        DB::table('tb_acs_queue')->where('serial_number', $cpe->serial_number)->delete();
+        
+        // Delete from tb_cpe
+        DB::table('tb_cpe')->where('id_cpe', $request->id_cpe)->delete();
+
+        return redirect()->route('admin.tr069.index')->with('success', 'Perangkat CPE berhasil dihapus.');
     }
 }

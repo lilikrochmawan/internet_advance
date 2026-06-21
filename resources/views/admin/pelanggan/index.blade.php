@@ -581,7 +581,7 @@
             <button class="modal-close" onclick="closeEditModal()">&times;</button>
         </div>
         <div class="modal-body">
-            <form action="{{ route('admin.pelanggan.update') }}" method="POST">
+            <form action="{{ route('admin.pelanggan.update') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin akan merubah data pelanggan tersebut?');">
                 @csrf
                 <input type="hidden" name="id_pelanggan" id="edit_id">
 

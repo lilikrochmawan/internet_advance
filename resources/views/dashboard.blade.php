@@ -740,7 +740,7 @@
 
         <div class="recommendation" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 14px;">
         </div>
-        <div class="footer">Powered by Indotel Lotus Computama</div>
+        <div class="footer">&copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'BILLING INTERNET' }}. Version 2.0 | By Lotus Computama Teknik. (Dilindungi hak cipta)</div>
     </div>
 
     <script>

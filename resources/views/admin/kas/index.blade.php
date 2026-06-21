@@ -54,7 +54,7 @@
 
     .stats-row {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         margin-bottom: 24px;
     }
@@ -82,6 +82,7 @@
     .stat-green .stat-icon { background:#f0fdf4; color:#16a34a; }
     .stat-red .stat-icon { background:#fef2f2; color:#dc2626; }
     .stat-purple .stat-icon { background:#faf5ff; color:#7c3aed; }
+    .stat-blue .stat-icon { background:#eff6ff; color:#2563eb; }
 
     .stat-info {
         display: flex;
@@ -221,6 +222,12 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
+    @media (max-width: 1024px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @media (max-width: 768px) {
         .stats-row {
             grid-template-columns: 1fr;
@@ -239,6 +246,14 @@
             <span class="stat-label">Total Kas Masuk</span>
         </div>
     </div>
+
+    <div class="stat-card stat-blue">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <div class="stat-info">
+            <span class="stat-value">Rp {{ number_format($pemasukan_bulan_ini, 0, ',', '.') }}</span>
+            <span class="stat-label">Pemasukan Bulan Ini</span>
+        </div>
+    </div>
     
     <div class="stat-card stat-red">
         <div class="stat-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
@@ -254,6 +269,7 @@
             <span class="stat-value">Rp {{ number_format($saldo, 0, ',', '.') }}</span>
             <span class="stat-label">Saldo Saat Ini</span>
         </div>
+    </div>
 </div>
 
 <!-- Card Cetak Laporan Keuangan (Kas) -->

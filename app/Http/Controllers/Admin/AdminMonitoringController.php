@@ -664,13 +664,36 @@ class AdminMonitoringController extends Controller
             ]);
 
             if (!empty($getNAT)) {
-                $idNAT = $getNAT[0]['.id'];
+                $rule = $getNAT[0];
+                $idNAT = $rule['.id'];
+                
+                // Get configured dst-port, default to 8063
+                $dstPort = $rule['dst-port'] ?? '8063';
+                
+                // Get remote host (configured in database, default to rmtsg3.perwiramedia.com)
+                $remoteHost = !empty($mikrotik->remote_host) ? $mikrotik->remote_host : 'rmtsg3.perwiramedia.com';
+
+                // Extract only host/domain/IP, stripping protocol/path if present
+                $hostOnly = $remoteHost;
+                if (preg_match('/^https?:\/\//i', $hostOnly)) {
+                    $hostOnly = preg_replace('/^https?:\/\//i', '', $hostOnly);
+                }
+                $hostOnly = explode('/', $hostOnly)[0];
+                $cleanHost = trim($hostOnly);
+
                 $API->comm("/ip/firewall/nat/set", [
                     ".id" => $idNAT,
                     "to-addresses" => $request->ip
                 ]);
                 $API->disconnect();
-                return response()->json(['success' => true, 'url' => 'http://rmtsg3.perwiramedia.com:8063/']);
+                
+                // If the configured remote host already has its own port, use it. Otherwise, append dst-port.
+                if (strpos($cleanHost, ':') !== false) {
+                    $url = "http://{$cleanHost}/";
+                } else {
+                    $url = "http://{$cleanHost}:{$dstPort}/";
+                }
+                return response()->json(['success' => true, 'url' => $url]);
             }
 
             $API->disconnect();
@@ -709,6 +732,8 @@ class AdminMonitoringController extends Controller
 
             $API->disconnect();
 
+            $remoteHost = $mikrotik->remote_host ?? 'rmtsg3.perwiramedia.com';
+
             if (!empty($getNAT)) {
                 $rule = $getNAT[0];
                 return response()->json([
@@ -722,6 +747,7 @@ class AdminMonitoringController extends Controller
                         'protocol' => $rule['protocol'] ?? 'tcp',
                         'comment' => $rule['comment'] ?? 'FORWARD MODEM',
                     ],
+                    'remote_host' => $remoteHost,
                     'interfaces' => $ifaceList
                 ]);
             }
@@ -736,6 +762,7 @@ class AdminMonitoringController extends Controller
                     'protocol' => 'tcp',
                     'comment' => 'FORWARD MODEM'
                 ],
+                'remote_host' => $remoteHost,
                 'interfaces' => $ifaceList
             ]);
         }
@@ -751,12 +778,18 @@ class AdminMonitoringController extends Controller
             'to_ports' => 'required|string',
             'in_interface' => 'nullable|string',
             'protocol' => 'required|string',
+            'remote_host' => 'required|string',
         ]);
 
         $mikrotik = DB::table('tbl_mikrotik')->where('id_mikrotik', $request->device_id)->first();
         if (!$mikrotik) {
             return response()->json(['success' => false, 'message' => 'Perangkat Mikrotik tidak ditemukan.']);
         }
+
+        // Save remote host in database
+        DB::table('tbl_mikrotik')->where('id_mikrotik', $request->device_id)->update([
+            'remote_host' => htmlspecialchars(strip_tags($request->remote_host))
+        ]);
 
         require_once base_path('include/routeros_api.php');
         $API = new \RouterosAPI();
