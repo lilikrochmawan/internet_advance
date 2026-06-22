@@ -327,7 +327,8 @@
                     @php
                         $lastInform = strtotime($row->last_inform);
                         $timeDiff = time() - $lastInform;
-                        $online = $timeDiff <= 600; // Online if inform <= 10 mins
+                        $pppoeActive = !empty($row->pppoe_status) && in_array(strtolower($row->pppoe_status), ['connected', 'up']);
+                        $online = ($timeDiff <= 900) || $pppoeActive;
                     @endphp
                     <tr>
                         <td>{{ $index + 1 }}</td>

@@ -98,6 +98,13 @@ class AuthController extends Controller
         $informasi = Informasi::orderByDesc('id_informasi')->first();
         $hasInformasi = Informasi::exists();
 
+        // Fetch last 5 invoices for history card
+        $invoices = \Illuminate\Support\Facades\DB::table('tb_tagihan')
+            ->whereIn('id_pelanggan', $pelangganIds)
+            ->orderBy('id_tagihan', 'desc')
+            ->limit(5)
+            ->get();
+
         return view('dashboard', [
             'user' => $user,
             'pelanggan' => $pelanggan,
@@ -109,6 +116,20 @@ class AuthController extends Controller
             'jumlahAkunGabung' => $jumlahAkunGabung,
             'informasi' => $informasi,
             'hasInformasi' => $hasInformasi,
+            'invoices' => $invoices,
         ]);
+    }
+
+    public function getRouterStats()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $mikrotikService = app(\App\Services\MikrotikService::class);
+        $stats = $mikrotikService->getPppoeStats((string)$user->username);
+
+        return response()->json($stats);
     }
 }

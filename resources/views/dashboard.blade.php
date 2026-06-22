@@ -3,122 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard Pelanggan</title>
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ asset('favicon.ico?v=3') }}" type="image/x-icon">
     <link rel="icon" type="image/png" href="{{ asset('favicon.png?v=3') }}">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             color-scheme: dark;
-            color: #e5e7eb;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --bg-color: #0b1124;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --border-color: rgba(148, 163, 184, 0.12);
+            --primary-gradient: linear-gradient(90deg, #6366f1, #7c3aed);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #eab308;
+            --text-light: #f8fafc;
+            --text-gray: #cbd5e1;
+            --text-dim: #94a3b8;
+            --font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
+
         * {
             box-sizing: border-box;
-        }
-        body {
             margin: 0;
-            min-height: 100vh;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-stack);
             background: radial-gradient(circle at top, rgba(79, 70, 229, .22), transparent 25%),
                         radial-gradient(circle at right, rgba(59, 130, 246, .14), transparent 15%),
                         linear-gradient(180deg, #0b1124 0%, #090d1d 100%);
-            color: #e5e7eb;
+            color: var(--text-light);
+            min-height: 100vh;
+            padding-bottom: 80px; /* Space for bottom nav on mobile */
         }
+
         .page {
             width: min(1120px, 100%);
             margin: 0 auto;
             padding: 24px;
         }
+
+        /* Topbar Header */
         .topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .topcard {
-            min-width: 0;
-            background: rgba(15, 23, 42, .72);
-            border: 1px solid rgba(148, 163, 184, .12);
-            border-radius: 28px;
-            padding: 22px 24px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 14px 24px;
             backdrop-filter: blur(16px);
+            margin-bottom: 24px;
+        }
+
+        /* Brand logo on Topbar */
+        .brand-logo-container {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: 0.5px;
         }
-        .topcard-left {
-            min-width: 0;
-        }
-        .topcard-title {
-            margin: 0;
-            font-size: 1.05rem;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: #c7d2fe;
-        }
-        .topcard-subtitle {
-            margin: 6px 0 0;
-            color: #cbd5e1;
-            font-size: .92rem;
-        }
-        .topcard-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.12);
-            color: #f8fafc;
-            font-size: .9rem;
-            font-weight: 600;
-        }
-        .topcard-actions {
+
+        .brand-logo-wrapper {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
             display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-        .logout-button {
-            display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 16px;
-            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.06);
-            color: #f8fafc;
-            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .brand-logo-wrapper img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+
+        .brand-logo-container span {
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Desktop Nav inside Topbar */
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item {
             text-decoration: none;
-            cursor: pointer;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
         }
-        .logout-button:hover {
-            background: rgba(255, 255, 255, 0.12);
+
+        .nav-item:hover {
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.05);
         }
-        .topcard-icon {
+
+        .nav-item.active {
+            color: #f8fafc;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-icon {
             width: 38px;
             height: 38px;
             display: grid;
             place-items: center;
             border-radius: 50%;
-            background: rgba(255,255,255,.12);
-            color: #e0e7ff;
-            font-size: 1.1rem;
-            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-size: 0.95rem;
             cursor: pointer;
             position: relative;
-            transition: background .2s ease;
+            transition: background 0.2s ease;
+            text-decoration: none;
         }
-        .topcard-icon:hover {
-            background: rgba(255,255,255,.2);
+
+        .topbar-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
+
         .topcard-icon--notify {
             animation: bell-swing 1.8s ease-in-out infinite;
             transform-origin: 50% 0%;
         }
-        .topcard-icon--notify:hover {
-            animation-play-state: paused;
-        }
+
         @keyframes bell-swing {
             0%, 100% { transform: rotate(0deg); }
             12% { transform: rotate(14deg); }
@@ -128,17 +169,468 @@
             60% { transform: rotate(5deg); }
             72% { transform: rotate(-3deg); }
         }
+
         .notif-badge {
             position: absolute;
             top: 4px;
             right: 4px;
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #ef4444;
-            border: 2px solid #0f172a;
-            box-shadow: 0 0 0 2px rgba(239, 68, 68, .35);
+            background: var(--danger-color);
+            border: 1px solid #0f172a;
         }
+
+        /* Welcome Text */
+        .welcome-section {
+            margin-bottom: 24px;
+        }
+
+        .welcome-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            font-weight: 700;
+        }
+
+        .welcome-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* Content Layout Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 24px;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Card 1: Client Card Details */
+        .client-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .client-info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .client-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.4rem;
+        }
+
+        .client-meta h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .client-meta p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .card-action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            display: grid;
+            place-items: center;
+            color: #818cf8;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .card-action-icon:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Inset Inner Panel matching Mockup */
+        .client-inner-panel {
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .connection-status-text {
+            font-size: 0.88rem;
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot--success { background-color: var(--success-color); box-shadow: 0 0 8px var(--success-color); }
+        .status-dot--danger { background-color: var(--danger-color); box-shadow: 0 0 8px var(--danger-color); }
+        .status-dot--warning { background-color: var(--warning-color); box-shadow: 0 0 8px var(--warning-color); }
+        .status-dot--loading { background-color: #cbd5e1; box-shadow: 0 0 8px #cbd5e1; }
+
+        .package-info-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .package-name-label {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-light);
+        }
+
+        .badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .badge-warning {
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--warning-color);
+            border: 1px solid rgba(234, 179, 8, 0.25);
+        }
+
+        /* Chips row */
+        .chips-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .chip-badge {
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        /* Due Dates info */
+        .due-dates-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 14px;
+        }
+
+        .date-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .date-line strong {
+            color: var(--text-light);
+            font-weight: 700;
+        }
+
+        /* Big Status Button */
+        .status-button-link {
+            text-decoration: none;
+            width: 100%;
+            display: block;
+        }
+
+        .status-button {
+            width: 100%;
+            border-radius: 16px;
+            border: none;
+            padding: 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .status-button--paid {
+            background-color: var(--success-color);
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+            cursor: default;
+        }
+
+        .status-button--unpaid {
+            background-color: #6366f1;
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+        }
+
+        .status-button--unpaid:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Card 2: Usage Card details */
+        .card-title-with-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .usage-item {
+            margin-bottom: 16px;
+        }
+
+        .usage-item-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.88rem;
+            color: var(--text-gray);
+            margin-bottom: 6px;
+        }
+
+        .usage-item-header span {
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease-in-out;
+            border-radius: 4px;
+        }
+
+        .progress-bar-fill--download {
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+        }
+
+        .progress-bar-fill--upload {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .duration-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px; /* Capsule pill shape matching mockup */
+            padding: 12px 20px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .duration-box span {
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        /* Card 3: Invoice History Card */
+        .invoice-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .invoice-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+
+        .invoice-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .invoice-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            display: grid;
+            place-items: center;
+            font-size: 1rem;
+        }
+
+        .invoice-id {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .invoice-date {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .invoice-item-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .invoice-amount {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-light);
+        }
+
+        .status-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .status-badge-paid {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success-color);
+        }
+
+        .status-badge-unpaid {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--danger-color);
+        }
+
+        .no-invoices {
+            text-align: left;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            padding: 14px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 9999px; /* Pill-shaped container matching mockup */
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Quick Action Cards Row */
+        .actions-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .action-item-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 16px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .action-item-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .action-item-card span {
+            font-size: 1.25rem;
+        }
+
+        .action-item-card p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-gray);
+        }
+
+        /* Announcement Info Modal */
         .info-modal-overlay {
             position: fixed;
             inset: 0;
@@ -148,449 +640,182 @@
             justify-content: center;
             padding: 20px;
             z-index: 9999;
+            backdrop-filter: blur(4px);
         }
+
         .info-modal-overlay.is-open {
             display: flex;
         }
+
         .info-modal {
-            width: min(520px, 100%);
-            background: linear-gradient(180deg, rgba(30, 41, 59, .98), rgba(15, 23, 42, .98));
-            border: 1px solid rgba(148, 163, 184, .18);
-            border-radius: 20px;
+            width: min(500px, 100%);
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalSlide 0.2s ease-out;
         }
+
+        @keyframes modalSlide {
+            from { transform: translateY(-16px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .info-modal h3 {
-            margin: 0 0 12px;
-            font-size: 1.15rem;
-            color: #e0e7ff;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         .info-modal p {
-            margin: 0;
-            color: #cbd5e1;
+            color: var(--text-gray);
             line-height: 1.6;
             white-space: pre-wrap;
+            font-size: 0.95rem;
         }
+
         .info-modal-actions {
-            margin-top: 20px;
+            margin-top: 24px;
             display: flex;
             justify-content: flex-end;
         }
+
         .info-modal-close {
-            padding: 10px 18px;
+            padding: 10px 20px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .12);
-            background: rgba(99, 102, 241, .25);
-            color: #f8fafc;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .info-modal-close:hover {
-            background: rgba(99, 102, 241, .4);
-        }
-        .topcard-profile {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #818cf8, #6366f1);
-            display: grid;
-            place-items: center;
+            border: none;
+            background: var(--primary-gradient);
             color: white;
             font-weight: 700;
-        }
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1.6fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        .card {
-            background: rgba(15, 23, 42, .75);
-            border: 1px solid rgba(148, 163, 184, .12);
-            border-radius: 28px;
-            padding: 28px;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, .24);
-        }
-        .card h2 {
-            margin: 0 0 14px;
-            font-size: 1.2rem;
-            color: #eef2ff;
-        }
-        .card .value {
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0;
-            letter-spacing: -.03em;
-            color: #f8fafc;
-        }
-        .card .description {
-            margin: 10px 0 20px;
-            color: #cbd5e1;
-            line-height: 1.65;
-        }
-        .button-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 14px 20px;
-            border-radius: 16px;
-            border: none;
-            color: #fff;
-            background: linear-gradient(90deg, #6366f1, #7c3aed);
-            text-decoration: none;
-            font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
         }
-        .package-card {
-            background: rgba(255,255,255,.06);
-            border: 1px solid rgba(255,255,255,.12);
-            border-radius: 26px;
-            padding: 22px;
-        }
-        .package-card h3 {
-            margin: 0;
-            font-size: 1rem;
-            color: #c7d2fe;
-            text-transform: uppercase;
-            letter-spacing: .1em;
-        }
-        .package-name {
+
+        /* Bottom Tab Navigation Bar for Mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 18px 0 12px;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 999;
         }
-        .package-icon {
-            width: 40px;
-            height: 40px;
-            display: grid;
-            place-items: center;
-            border-radius: 14px;
-            background: rgba(255,255,255,.12);
-            color: #a5b4fc;
-            font-size: 1.1rem;
-        }
-        .package-name h4 {
-            margin: 0;
-            font-size: 1.3rem;
-            color: #fff;
-        }
-        .package-status {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.12);
-            color: #e2e8f0;
-            font-size: .92rem;
-        }
-        .progress {
-            position: relative;
-            background: rgba(255,255,255,.08);
-            border-radius: 999px;
-            height: 12px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-        .progress::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, #818cf8, #7c3aed);
-            width: 48%;
-        }
-        .button-row {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-            margin: 0 -8px;
-        }
-        .action-card {
+
+        .bottom-nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 20px;
-            background: rgba(255,255,255,.06);
-            border: 1px solid rgba(255,255,255,.1);
-            border-radius: 22px;
-            min-height: 120px;
-            text-align: center;
-            color: #e5e7eb;
-        }
-        .action-card span {
-            width: 44px;
-            height: 44px;
-            display: grid;
-            place-items: center;
-            border-radius: 14px;
-            background: rgba(255,255,255,.1);
-            color: #c7d2fe;
-            font-size: 1.3rem;
-        }
-        .action-card p {
-            margin: 0;
-            font-size: .95rem;
-            color: #cbd5e1;
-        }
-        .recommendation {
-            margin-top: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-        }
-        .recommendation h3 {
-            margin: 0;
-            font-size: 1rem;
-            color: #e5e7eb;
-        }
-        .recommendation a {
-            color: #a5b4fc;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .recommendation-list {
-            margin-top: 18px;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
-        }
-        .paket-card {
-            overflow: hidden;
-            border-radius: 22px;
-            border: 1px solid rgba(124, 58, 237, .35);
-            background: #fff;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
-        }
-        .paket-card-header {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
-            align-items: center;
-            gap: 16px;
-            padding: 18px 20px;
-            background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 55%, #8b5cf6 100%);
-            color: #fff;
-        }
-        .paket-card-title {
-            margin: 0;
-            font-size: 1.05rem;
-            font-weight: 700;
-            line-height: 1.3;
-        }
-        .paket-card-divider {
-            width: 1px;
-            height: 52px;
-            background: rgba(255, 255, 255, .45);
-        }
-        .paket-card-speed {
-            text-align: center;
-            min-width: 72px;
-        }
-        .paket-card-speed strong {
-            display: block;
-            font-size: 2rem;
-            line-height: 1;
-            font-weight: 800;
-        }
-        .paket-card-speed span {
-            display: block;
-            margin-top: 4px;
-            font-size: .95rem;
-            font-weight: 600;
-            opacity: .95;
-        }
-        .paket-card-body {
-            padding: 20px 22px 18px;
-            background: #fff;
-        }
-        .paket-feature-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: grid;
-            gap: 14px;
-        }
-        .paket-feature-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            color: #334155;
-            font-size: .95rem;
-            line-height: 1.45;
-        }
-        .paket-feature-icon {
-            width: 22px;
-            height: 22px;
-            flex: 0 0 22px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            color: #fff;
-            font-size: .72rem;
-            font-weight: 700;
-        }
-        .paket-card-footer {
-            padding: 16px 22px 20px;
-            border-top: 1px solid #e2e8f0;
-            background: #fff;
-        }
-        .paket-price {
-            display: flex;
-            align-items: flex-end;
             gap: 4px;
-            color: #7c3aed;
-            font-weight: 800;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 600;
+            flex: 1;
+            transition: color 0.2s;
         }
-        .paket-price-currency {
-            font-size: 1rem;
-            line-height: 1;
-            margin-bottom: 6px;
+
+        .bottom-nav-item i {
+            font-size: 1.25rem;
         }
-        .paket-price-main {
-            font-size: 2.4rem;
-            line-height: 1;
-            letter-spacing: -.03em;
+
+        .bottom-nav-item.active {
+            color: #6366f1;
         }
-        .paket-price-suffix {
-            display: flex;
-            flex-direction: column;
-            font-size: .95rem;
-            line-height: 1.15;
-            margin-bottom: 2px;
-        }
-        .paket-card-empty {
-            grid-column: 1 / -1;
-            padding: 24px;
-            border-radius: 22px;
-            border: 1px dashed rgba(255,255,255,.2);
-            color: #cbd5e1;
-            text-align: center;
-        }
-        .alert-success {
-            margin-bottom: 20px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(34, 197, 94, .12);
-            border: 1px solid rgba(74, 222, 128, .35);
-            color: #bbf7d0;
-        }
-        a.action-card {
-            cursor: pointer;
-        }
+
+        /* Footer styling */
         .footer {
-            margin-top: 38px;
+            margin-top: 40px;
             text-align: center;
-            color: #94a3b8;
-            font-size: .86rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            padding-bottom: 20px;
         }
-        @media (max-width: 900px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            .button-row {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-            .recommendation-list {
-                grid-template-columns: 1fr;
+
+        /* Desktop vs Mobile Media Queries */
+        @media (min-width: 769px) {
+            .bottom-nav {
+                display: none; /* Hide bottom nav on desktop */
             }
         }
-        @media (max-width: 620px) {
+
+        @media (max-width: 768px) {
+            .topbar-nav {
+                display: none; /* Hide topbar nav links on mobile */
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
             .page {
                 padding: 16px 12px;
             }
-            .card {
-                padding: 20px 16px;
+            .topbar {
+                padding: 12px 16px;
             }
-            .topcard {
-                flex-direction: column;
-                gap: 16px;
-                text-align: center;
-                padding: 20px 16px;
-            }
-            .topcard-left {
-                width: 100%;
-            }
-            .topcard-actions {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-            .button-row {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-            .action-card {
-                min-height: 100px;
-                padding: 16px;
-            }
-            .recommendation-list {
-                gap: 16px;
-            }
-            .paket-card-header {
-                grid-template-columns: 1fr;
-                text-align: center;
+            .actions-row {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
-            }
-            .paket-card-divider {
-                display: none;
-            }
-            .paket-card-speed {
-                display: flex;
-                align-items: baseline;
-                justify-content: center;
-                gap: 4px;
-                min-width: unset;
-            }
-            .paket-card-speed strong {
-                display: inline;
-                font-size: 1.6rem;
-            }
-            .paket-card-speed span {
-                display: inline;
-                font-size: 0.9rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="page">
+        <!-- Topbar Header -->
         <div class="topbar">
-            <div class="topcard">
-                <div class="topcard-left">
-                    <p class="topcard-title">{{ $user->nama_user ?? 'User' }}</p>
-                    <p class="topcard-subtitle">{{ $pelanggan->no_telp ?? 'N/A' }} · {{ $pelanggan->alamat ?? '-' }}</p>
+            <!-- Brand Logo matching Login Page wrapper style -->
+            <a href="{{ route('dashboard') }}" class="brand-logo-container">
+                <div class="brand-logo-wrapper">
+                    @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
+                        <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo">
+                    @else
+                        <img src="{{ asset('images/ion.png') }}" alt="Logo">
+                    @endif
                 </div>
-                <div class="topcard-actions">
-                    <button type="button" class="topcard-icon{{ ($hasInformasi ?? false) ? ' topcard-icon--notify' : '' }}" id="btnInformasi" title="Informasi" aria-label="Buka informasi">
-                        🔔
-                        @if($hasInformasi ?? false)
-                            <span class="notif-badge" aria-hidden="true"></span>
-                        @endif
-                    </button>
-                    <div class="topcard-profile" title="{{ $user->nama_user }}">{{ substr($user->nama_user, 0, 1) }}</div>
-                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                        @csrf
-                        <button type="submit" class="button-primary" style="background: linear-gradient(90deg, #dc2626, #991b1b);">Logout</button>
-                    </form>
-                </div>
+                <span>{{ $profile->nama_sekolah ?? 'LOTUS COMPUTAMA TEKNIK' }}</span>
+            </a>
+
+            <!-- Desktop Navigation Links (Indonesian) -->
+            <div class="topbar-nav">
+                <a href="{{ route('dashboard') }}" class="nav-item active">Dashboard</a>
+                <a href="{{ route('network.status') }}" class="nav-item">Akun</a>
+                <a href="{{ route('keluhan.index') }}" class="nav-item">Tiket</a>
+            </div>
+
+            <!-- Topbar Icons/Actions -->
+            <div class="topbar-actions">
+                <!-- Announcement Icon -->
+                <button type="button" class="topbar-icon {{ ($hasInformasi ?? false) ? 'topcard-icon--notify' : '' }}" id="btnInformasi" title="Informasi" aria-label="Buka informasi">
+                    <i class="fa-solid fa-bell"></i>
+                    @if($hasInformasi ?? false)
+                        <span class="notif-badge" aria-hidden="true"></span>
+                    @endif
+                </button>
+                <!-- Logout Button -->
+                <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display:none;">
+                    @csrf
+                </form>
+                <button type="button" class="topbar-icon" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.25);" onclick="document.getElementById('logout-form').submit()" title="Keluar">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
         </div>
 
+        <!-- Announcement Information Modal -->
         <div class="info-modal-overlay" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
             <div class="info-modal">
-                <h3 id="infoModalTitle">{{ $informasi->judul_informasi ?? 'Informasi' }}</h3>
+                <h3 id="infoModalTitle">
+                    <i class="fa-solid fa-circle-info" style="color:#6366f1;"></i> 
+                    {{ $informasi->judul_informasi ?? 'Informasi' }}
+                </h3>
                 <p>{{ $informasi->isi_informasi ?? 'Belum ada informasi terbaru.' }}</p>
                 <div class="info-modal-actions">
                     <button type="button" class="info-modal-close" id="btnCloseInformasi">Tutup</button>
@@ -598,173 +823,378 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
-        @endif
-
-        @php
-            $formatRp = fn($amount) => 'Rp ' . number_format(max(0, $amount), 0, ',', '.');
-            $parseKecepatan = function ($namaPaket) {
-                preg_match_all('/(\d+)/', (string) $namaPaket, $matches);
-                if (empty($matches[0])) {
-                    return null;
-                }
-                return (int) end($matches[0]);
-            };
-            $formatHargaPaket = function ($harga) {
-                $formatted = number_format((int) $harga, 0, ',', '.');
-                $parts = explode('.', $formatted, 2);
-
-                return [
-                    'utama' => $parts[0],
-                    'ribuan' => isset($parts[1]) ? '.' . $parts[1] : '',
-                ];
-            };
-        @endphp
-
-        <div class="content-grid">
-            <div class="card">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap:16px; flex-wrap: wrap;">
-                    <div>
-                        <p style="margin: 0; font-size: .88rem; letter-spacing: .1em; color: #c7d2fe; text-transform: uppercase;">Tagihan Anda</p>
-                        <h2 style="margin: 10px 0 0; font-size: 1.7rem;">{{ $formatRp($tagihanTotal) }}</h2>
-                        <p class="description">Bayar tagihanmu tepat waktu agar layanan tetap aktif dan lancar.</p>
-                        <p class="description" style="margin-top: 8px; font-size: .95rem;">
-                            Internet: {{ $formatRp($tagihanBulanIni) }}<br>
-                            Invoice Lain: {{ $formatRp($tagihanManual) }}
-                            @if ($jumlahAkunGabung > 1)
-                                <br><span style="color:#a5b4fc;">Tagihan digabung dari {{ $jumlahAkunGabung }} Pelanggan dengan nomor HP sama.</span>
-                            @endif
-                        </p>
-                    </div>
-                    <a href="{{ route('payment.detail') }}" class="button-primary">Bayar Tagihan</a>
-                </div>
-            </div>
-
-            <div class="package-card">
-                <h3>Detail Paket</h3>
-                <div class="package-name">
-                    <div class="package-icon">🌐</div>
-                    <div>
-                        <h4>Paket Internet</h4>
-                        <p style="margin: 6px 0 0; color:#cbd5e1; font-size:.95rem;">
-                            @if($pelanggan)
-                                {{ optional($paket)->nama_paket ?? 'Paket ' . $pelanggan->paket }}
-                            @else
-                                N/A
-                            @endif
-                        </p>
-                    </div>
-                </div>
-                <div class="progress"></div>
-                <div class="package-status">
-                    <div class="chip">Unlimited</div>
-                    <div class="chip">-</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="button-row">
-            <a href="{{ route('keluhan.create') }}" class="action-card" style="text-decoration: none;">
-                <span>📊</span>
-                <p>Buat Laporan</p>
-            </a>
-            <a href="{{ route('network.status') }}" class="action-card" style="text-decoration: none;">
-                <span>📶</span>
-                <p>Status Jaringan</p>
-            </a>
-            <div class="action-card">
-                <span>⬆️</span>
-                <p>Upgrade</p>
-            </div>          
-            <a href="{{ route('keluhan.index') }}" class="action-card" style="text-decoration: none;">
-                <span>☰</span>
-                <p>Lihat Ticket</p>
-            </a>
-        </div>
-
-        <div class="recommendation">
-            <h3>Rekomendasi</h3>
-            @if($paketRekomendasi->isNotEmpty())
-                <a href="#">See all</a>
-            @endif
-        </div>
-        <div class="recommendation-list">
-            @forelse($paketRekomendasi as $index => $itemPaket)
+        <!-- Dynamic Welcome Greetings in Indonesian -->
+        <div class="welcome-section">
+            <p class="welcome-label">SELAMAT DATANG,</p>
+            <h1 class="welcome-title">
                 @php
-                    $kecepatan = $parseKecepatan($itemPaket->nama_paket);
-                    $hargaPaket = $formatHargaPaket($itemPaket->harga);
+                    $hour = date('H');
+                    if ($hour >= 5 && $hour < 12) {
+                        $greeting = 'Selamat Pagi 🌅';
+                    } elseif ($hour >= 12 && $hour < 17) {
+                        $greeting = 'Selamat Siang ☀️';
+                    } elseif ($hour >= 17 && $hour < 20) {
+                        $greeting = 'Selamat Sore 🌇';
+                    } else {
+                        $greeting = 'Selamat Malam 🌃';
+                    }
                 @endphp
-                <article class="paket-card">
-                    <div class="paket-card-header">
-                        <h4 class="paket-card-title">Paket {{ $itemPaket->nama_paket }}</h4>
-                        <div class="paket-card-divider" aria-hidden="true"></div>
-                        <div class="paket-card-speed">
-                            <strong>{{ $kecepatan ?? '-' }}</strong>
-                            <span>Mbps</span>
-                        </div>
-                    </div>
-                    <div class="paket-card-body">
-                        <ul class="paket-feature-list">
-                            <li>
-                                <span class="paket-feature-icon">✓</span>
-                                <span>Kecepatan unggah hingga {{ $kecepatan ?? '-' }} Mbps</span>
-                            </li>
-                            <li>
-                                <span class="paket-feature-icon">✓</span>
-                                <span>Kecepatan unduh hingga {{ $kecepatan ?? '-' }} Mbps</span>
-                            </li>
-                            <li>
-                                <span class="paket-feature-icon">✓</span>
-                                <span>Kuota tidak terbatas</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="paket-card-footer">
-                        <div class="paket-price">
-                            <span class="paket-price-currency">Rp</span>
-                            <span class="paket-price-main">{{ $hargaPaket['utama'] }}</span>
-                            <span class="paket-price-suffix">
-                                <span>{{ $hargaPaket['ribuan'] }}</span>
-                                <span>/bulan</span>
-                            </span>
-                        </div>
-                    </div>
-                </article>
-            @empty
-                <div class="paket-card-empty">
-                    Paket 20 Mb dan 30 Mb belum tersedia.
-                </div>
-            @endforelse
+                {{ $greeting }}
+            </h1>
         </div>
 
-        <div class="recommendation" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 14px;">
+        <!-- Dashboard Content Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column: Profile Card and Live Bandwidth Usage -->
+            <div class="left-column">
+                <!-- Card 1: Client Card -->
+                <div class="card">
+                    <div class="client-header">
+                        <div class="client-info-wrapper">
+                            <div class="client-avatar">
+                                {{ substr($pelanggan->nama_pelanggan ?? $user->nama_user ?? 'C', 0, 1) }}
+                            </div>
+                            <div class="client-meta">
+                                <h3>{{ $pelanggan->nama_pelanggan ?? $user->nama_user }}</h3>
+                                <p>{{ $pelanggan->alamat ?? '-' }}</p>
+                            </div>
+                        </div>
+                        <!-- Secondary Action Icon: Document icon matching mockup top-right -->
+                        <a href="{{ route('network.status') }}" class="card-action-icon" title="Detail Akun & WiFi">
+                            <i class="fa-regular fa-file-lines"></i>
+                        </a>
+                    </div>
+
+                    <!-- Client Inset Inner Panel matching Mockup layout -->
+                    <div class="client-inner-panel">
+                        <!-- Dynamic Connection status based on Router states / logic -->
+                        <p class="connection-status-text" id="connection-status">
+                            <span class="status-dot status-dot--loading"></span> Memeriksa status...
+                        </p>
+                        
+                        <!-- Package Details -->
+                        <div class="package-info-line">
+                            <span class="package-name-label">
+                                Paket {{ optional($paket)->nama_paket ?? 'Internet' }}
+                            </span>
+                            @if($tagihanTotal > 0)
+                                <span class="badge badge-danger" id="package-status-badge">Isolir</span>
+                            @else
+                                <span class="badge badge-success" id="package-status-badge">Aktif</span>
+                            @endif
+                        </div>
+
+                        <!-- Prabayar & Perpanjangan Chips badges -->
+                        <div class="chips-row">
+                            <span class="chip-badge">Prabayar</span>
+                            <span class="chip-badge">Perpanjangan</span>
+                        </div>
+
+                        <!-- Due Dates Details in Indonesian -->
+                        @php
+                            $firstUnpaid = collect($invoices)->where('status_bayar', 0)->first();
+                            $dueDateStr = $firstUnpaid ? \Carbon\Carbon::parse($firstUnpaid->jatuh_tempo)->translatedFormat('d F Y') : '-';
+                            $suspendDateStr = $firstUnpaid ? \Carbon\Carbon::parse($firstUnpaid->jatuh_tempo)->translatedFormat('d F Y') : '-';
+                        @endphp
+                        <div class="due-dates-info">
+                            <div class="date-line">
+                                <span>Tanggal Jatuh Tempo Tagihan</span>
+                                <strong>{{ $dueDateStr }}</strong>
+                            </div>
+                            <div class="date-line">
+                                <span>Tanggal Isolir Layanan</span>
+                                <strong>{{ $suspendDateStr }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paid/Unpaid Big Button at bottom of card -->
+                    @if($tagihanTotal == 0)
+                        <div class="status-button status-button--paid">
+                            <i class="fa-solid fa-circle-check"></i> ✓ Lunas
+                        </div>
+                    @else
+                        <a href="{{ route('payment.detail') }}" class="status-button-link">
+                            <button class="status-button status-button--unpaid">
+                                <i class="fa-solid fa-wallet"></i> Bayar Sekarang ({{ 'Rp ' . number_format($tagihanTotal, 0, ',', '.') }})
+                            </button>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Card 2: Usage Card (Translated to Indonesian) -->
+                <div class="card">
+                    <div class="card-title-with-icon">
+                        <span>🚀</span>
+                        <span>Penggunaan Bulan Ini</span>
+                    </div>
+
+                    <!-- Download Usage -->
+                    <div class="usage-item">
+                        <div class="usage-item-header">
+                            <p><i class="fa-solid fa-download" style="color:#3b82f6;"></i> Unduh</p>
+                            <span id="download-usage">0 B</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill progress-bar-fill--download" id="dl-progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Usage -->
+                    <div class="usage-item" style="margin-bottom:0;">
+                        <div class="usage-item-header">
+                            <p><i class="fa-solid fa-upload" style="color:#10b981;"></i> Unggah</p>
+                            <span id="upload-usage">0 B</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill progress-bar-fill--upload" id="ul-progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Active Session Duration (Capsule box matching mockup) -->
+                    <div class="duration-box">
+                        <p><i class="fa-regular fa-clock" style="margin-right:6px;"></i> Durasi</p>
+                        <span id="session-duration">0 jam 0 menit</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Invoice History and Quick Actions -->
+            <div class="right-column">
+                <!-- Card 3: Invoice History (Translated to Indonesian) -->
+                <div class="card">
+                    <div class="card-title-with-icon">
+                        <span>📦</span>
+                        <span>Riwayat Tagihan</span>
+                    </div>
+
+                    <div class="invoice-history-list">
+                        @forelse($invoices as $inv)
+                            <div class="invoice-item">
+                                <div class="invoice-item-left">
+                                    <div class="invoice-icon">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    </div>
+                                    <div>
+                                        <p class="invoice-id">INV-{{ $inv->id_tagihan }}</p>
+                                        <p class="invoice-date">Periode: {{ $inv->bulan_tahun }}</p>
+                                    </div>
+                                </div>
+                                <div class="invoice-item-right">
+                                    <p class="invoice-amount">{{ 'Rp ' . number_format($inv->jml_bayar, 0, ',', '.') }}</p>
+                                    @if($inv->status_bayar == 1)
+                                        <span class="status-badge status-badge-paid">Lunas</span>
+                                    @else
+                                        <span class="status-badge status-badge-unpaid">Belum Lunas</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="no-invoices">
+                                Tidak ada tagihan aktif.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons in Indonesian -->
+                <div class="actions-row">
+                    <a href="{{ route('keluhan.create') }}" class="action-item-card">
+                        <span><i class="fa-solid fa-bug-slash" style="color:#f43f5e;"></i></span>
+                        <p>Lapor Gangguan</p>
+                    </a>
+                    <a href="{{ route('network.status') }}" class="action-item-card">
+                        <span><i class="fa-solid fa-wifi" style="color:#3b82f6;"></i></span>
+                        <p>Status Jaringan</p>
+                    </a>
+                    <div class="action-item-card" style="opacity: 0.6; cursor: not-allowed;" title="Layanan Penuh">
+                        <span><i class="fa-solid fa-arrow-up-right-dots" style="color:#eab308;"></i></span>
+                        <p>Upgrade</p>
+                    </div>
+                    <a href="{{ route('keluhan.index') }}" class="action-item-card">
+                        <span><i class="fa-solid fa-ticket-simple" style="color:#10b981;"></i></span>
+                        <p>Lihat Tiket</p>
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="footer">&copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'BILLING INTERNET' }}. Version 2.0 | By Lotus Computama Teknik. (Dilindungi hak cipta)</div>
+
+        <!-- Footer version info in Indonesian -->
+        <div class="footer">
+            &copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'BILLING INTERNET' }}. Versi 2.1 | Oleh Lotus Computama Teknik. (Dilindungi hak cipta)
+        </div>
     </div>
 
+    <!-- Mobile Bottom Navigation Bar in Indonesian -->
+    <nav class="bottom-nav">
+        <a href="{{ route('dashboard') }}" class="bottom-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <i class="fa-solid fa-gauge"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ route('network.status') }}" class="bottom-nav-item {{ request()->routeIs('network.status') ? 'active' : '' }}">
+            <i class="fa-solid fa-key"></i>
+            <span>Akun</span>
+        </a>
+        <a href="{{ route('keluhan.index') }}" class="bottom-nav-item {{ request()->routeIs('keluhan.*') ? 'active' : '' }}">
+            <i class="fa-solid fa-ticket"></i>
+            <span>Tiket</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <i class="fa-solid fa-user"></i>
+            <span>Profil</span>
+        </a>
+    </nav>
+
+    <!-- AJAX script to load live session stats and Uptime from router -->
     <script>
         (function () {
+            // Modal script
             var btnOpen = document.getElementById('btnInformasi');
             var btnClose = document.getElementById('btnCloseInformasi');
             var modal = document.getElementById('infoModal');
-            if (!btnOpen || !modal) return;
-
-            function openModal() {
-                modal.classList.add('is-open');
+            if (btnOpen && modal) {
+                function openModal() { modal.classList.add('is-open'); }
+                function closeModal() { modal.classList.remove('is-open'); }
+                btnOpen.addEventListener('click', openModal);
+                if (btnClose) btnClose.addEventListener('click', closeModal);
+                modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+                document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
             }
-            function closeModal() {
-                modal.classList.remove('is-open');
+
+            // Live Router stats loading
+            const connStatusEl = document.getElementById("connection-status");
+            const dlUsageEl = document.getElementById("download-usage");
+            const ulUsageEl = document.getElementById("upload-usage");
+            const durationEl = document.getElementById("session-duration");
+            
+            const dlProgress = document.getElementById("dl-progress-bar");
+            const ulProgress = document.getElementById("ul-progress-bar");
+            const packageBadgeEl = document.getElementById("package-status-badge");
+
+            // Format Bytes helper
+            function formatBytes(bytes) {
+                if (!bytes || bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            btnOpen.addEventListener('click', openModal);
-            if (btnClose) btnClose.addEventListener('click', closeModal);
-            modal.addEventListener('click', function (e) {
-                if (e.target === modal) closeModal();
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeModal();
-            });
+            // Format Uptime helper for Mikrotik values to Indonesian
+            function formatUptime(uptime) {
+                if (!uptime || uptime === '0s') return '0 jam 0 menit';
+                
+                if (uptime.includes(':')) {
+                    const parts = uptime.split(':');
+                    if (parts.length === 3) {
+                        const h = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10);
+                        return `${h} jam ${m} menit`;
+                    }
+                }
+                
+                let days = 0, hours = 0, minutes = 0;
+                const dMatch = uptime.match(/(\d+)d/);
+                const hMatch = uptime.match(/(\d+)h/);
+                const mMatch = uptime.match(/(\d+)m/);
+                
+                if (dMatch) days = parseInt(dMatch[1], 10);
+                if (hMatch) hours = parseInt(hMatch[1], 10);
+                if (mMatch) minutes = parseInt(mMatch[1], 10);
+                
+                let res = [];
+                if (days > 0) res.push(`${days} hari`);
+                if (hours > 0 || days > 0) res.push(`${hours} jam`);
+                res.push(`${minutes} menit`);
+                
+                return res.join(' ');
+            }
+            
+            fetch("{{ route('dashboard.router_stats') }}")
+                .then(r => r.json())
+                .then(res => {
+                    // Update connection status label and dot class based on server status response
+                    if (res.status_label) {
+                        if (connStatusEl) {
+                            connStatusEl.innerHTML = `<span class="status-dot status-dot--${res.status_color}"></span> ${res.status_label}`;
+                        }
+                    } else {
+                        // Fallback logic
+                        if (connStatusEl) {
+                            if (res.online) {
+                                connStatusEl.innerHTML = '<span class="status-dot status-dot--success"></span> Internet Aktif';
+                            } else {
+                                const hasUnpaid = {{ $tagihanTotal > 0 ? 'true' : 'false' }};
+                                if (hasUnpaid) {
+                                    connStatusEl.innerHTML = '<span class="status-dot status-dot--danger"></span> Internet Terisolir';
+                                } else {
+                                    connStatusEl.innerHTML = '<span class="status-dot status-dot--success"></span> Internet Aktif';
+                                }
+                            }
+                        }
+                    }
+
+                    // Update package status badge dynamically
+                    if (packageBadgeEl && res.status) {
+                        packageBadgeEl.className = "badge";
+                        if (res.status === 'terisolir') {
+                            packageBadgeEl.textContent = "Isolir";
+                            packageBadgeEl.classList.add("badge-danger");
+                        } else if (res.status === 'aktif') {
+                            packageBadgeEl.textContent = "Aktif";
+                            packageBadgeEl.classList.add("badge-success");
+                        } else if (res.status === 'aktif_tidak_terhubung') {
+                            packageBadgeEl.textContent = "Tidak Terhubung";
+                            packageBadgeEl.classList.add("badge-warning");
+                        }
+                    }
+
+                    // Populate dynamic bandwidth stats
+                    if (dlUsageEl) dlUsageEl.textContent = formatBytes(res.bytes_out || 0);
+                    if (ulUsageEl) ulUsageEl.textContent = formatBytes(res.bytes_in || 0);
+                    if (durationEl) durationEl.textContent = formatUptime(res.uptime || '0s');
+                    
+                    // Set progress bar widths dynamically
+                    const bytesOut = res.bytes_out || 0;
+                    const bytesIn = res.bytes_in || 0;
+                    const totalBytes = bytesOut + bytesIn;
+                    if (totalBytes > 0) {
+                        const dlPct = Math.round((bytesOut / totalBytes) * 100);
+                        const ulPct = Math.round((bytesIn / totalBytes) * 100);
+                        if (dlProgress) dlProgress.style.width = dlPct + "%";
+                        if (ulProgress) ulProgress.style.width = ulPct + "%";
+                    } else {
+                        if (dlProgress) dlProgress.style.width = "0%";
+                        if (ulProgress) ulProgress.style.width = "0%";
+                    }
+                })
+                .catch(err => {
+                    console.error("Gagal memuat stats router:", err);
+                    if (connStatusEl) {
+                        const hasUnpaid = {{ $tagihanTotal > 0 ? 'true' : 'false' }};
+                        if (hasUnpaid) {
+                            connStatusEl.innerHTML = '<span class="status-dot status-dot--danger"></span> Internet Terisolir';
+                        } else {
+                            connStatusEl.innerHTML = '<span class="status-dot status-dot--success"></span> Internet Aktif';
+                        }
+                    }
+                    if (packageBadgeEl) {
+                        packageBadgeEl.className = "badge";
+                        const hasUnpaid = {{ $tagihanTotal > 0 ? 'true' : 'false' }};
+                        if (hasUnpaid) {
+                            packageBadgeEl.textContent = "Isolir";
+                            packageBadgeEl.classList.add("badge-danger");
+                        } else {
+                            packageBadgeEl.textContent = "Tidak Terhubung";
+                            packageBadgeEl.classList.add("badge-warning");
+                        }
+                    }
+                    if (dlUsageEl) dlUsageEl.textContent = "0 B";
+                    if (ulUsageEl) ulUsageEl.textContent = "0 B";
+                    if (durationEl) durationEl.textContent = "0 jam 0 menit";
+                    if (dlProgress) dlProgress.style.width = "0%";
+                    if (ulProgress) ulProgress.style.width = "0%";
+                });
         })();
     </script>
 </body>

@@ -374,7 +374,7 @@ class AdminMonitoringController extends Controller
 
         if ($API->connect($mikrotik->ip, $mikrotik->username, $mikrotik->password)) {
             $pppSecrets = $API->comm("/ppp/secret/print", [
-                ".proplist" => "name,last-logged-out,remote-address,disabled"
+                ".proplist" => "name,last-logged-out,remote-address,disabled,profile"
             ]) ?: [];
             $activeClients = $API->comm("/ppp/active/print", [
                 ".proplist" => ".id,name,address"
@@ -426,6 +426,7 @@ class AdminMonitoringController extends Controller
                 $lastLogout = $secret['last-logged-out'] ?? '-';
                 $ipAddress = $secret['remote-address'] ?? '-';
                 $disabled = $secret['disabled'] ?? 'false';
+                $profile = $secret['profile'] ?? '';
 
                 $ac = $activeClientsMap[$username] ?? null;
                 $isActive = ($ac !== null);
@@ -435,9 +436,9 @@ class AdminMonitoringController extends Controller
                     $ipAddress = $ipActive;
                 }
 
-                if ($isActive && !in_array($ipActive, $isolirList)) {
+                if ($isActive && !in_array($ipActive, $isolirList) && $profile !== 'pppoe-isolir') {
                     $status = 'aktif';
-                } elseif ((in_array($ipActive, $isolirList) && $ipActive != "") || $disabled == 'true') {
+                } elseif ((in_array($ipActive, $isolirList) && $ipActive != "") || $disabled == 'true' || $profile === 'pppoe-isolir') {
                     $status = 'terisolir';
                 } else {
                     $status = 'tidak_aktif';
@@ -524,7 +525,7 @@ class AdminMonitoringController extends Controller
 
         if ($API->connect($mikrotik->ip, $mikrotik->username, $mikrotik->password)) {
             $pppSecrets = $API->comm("/ppp/secret/print", [
-                ".proplist" => "name,last-logged-out,remote-address,disabled"
+                ".proplist" => "name,last-logged-out,remote-address,disabled,profile"
             ]) ?: [];
             $activeClients = $API->comm("/ppp/active/print", [
                 ".proplist" => ".id,name,address"
@@ -563,6 +564,7 @@ class AdminMonitoringController extends Controller
                 $lastLogout = $secret['last-logged-out'] ?? '-';
                 $ipAddress = $secret['remote-address'] ?? '-';
                 $disabled = $secret['disabled'] ?? 'false';
+                $profile = $secret['profile'] ?? '';
 
                 $ac = $activeClientsMap[$username] ?? null;
                 $isActive = ($ac !== null);
@@ -572,10 +574,10 @@ class AdminMonitoringController extends Controller
                     $ipAddress = $ipActive;
                 }
 
-                if ($isActive && !in_array($ipActive, $isolirList)) {
+                if ($isActive && !in_array($ipActive, $isolirList) && $profile !== 'pppoe-isolir') {
                     $status = 'aktif';
                     $sortPriority = 1;
-                } elseif ((in_array($ipActive, $isolirList) && $ipActive != "") || $disabled == 'true') {
+                } elseif ((in_array($ipActive, $isolirList) && $ipActive != "") || $disabled == 'true' || $profile === 'pppoe-isolir') {
                     $status = 'terisolir';
                     $sortPriority = 2;
                 } else {

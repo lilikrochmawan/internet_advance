@@ -374,7 +374,8 @@
             @php
                 $lastInform = strtotime($cpe->last_inform);
                 $timeDiff = time() - $lastInform;
-                $online = $timeDiff <= 600;
+                $pppoeActive = !empty($cpe->pppoe_status) && in_array(strtolower($cpe->pppoe_status), ['connected', 'up']);
+                $online = ($timeDiff <= 900) || $pppoeActive;
             @endphp
             <div class="card">
                 <div class="info-row" style="border-bottom: 1px solid rgba(148, 163, 184, .12); padding-bottom: 15px;">

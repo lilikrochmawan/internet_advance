@@ -546,11 +546,15 @@
     <!-- Status Bar -->
     <div class="tr-status-bar">
         @php
+            $pppoeActive = !empty($cpe->pppoe_status) && in_array(strtolower($cpe->pppoe_status), ['connected', 'up']);
             $isOnline = false;
             if ($cpe->last_inform) {
                 // If last inform was within past 15 minutes, consider online
                 $lastInformTime = \Carbon\Carbon::parse($cpe->last_inform);
                 $isOnline = $lastInformTime->diffInMinutes(now()) <= 15;
+            }
+            if ($pppoeActive) {
+                $isOnline = true;
             }
         @endphp
         <div class="tr-status-indicator {{ $isOnline ? '' : 'offline' }}"></div>
