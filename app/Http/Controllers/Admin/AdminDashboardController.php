@@ -277,6 +277,24 @@ class AdminDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // 8. Cek Pengingat Jatuh Tempo Lisensi (H-14)
+        $showLicenseWarning = false;
+        $licenseDaysRemaining = null;
+
+        if ($profile && $profile->license_status === 'active' && $profile->license_expires_at) {
+            $expiry = Carbon::parse($profile->license_expires_at);
+            $days = Carbon::now()->diffInDays($expiry, false);
+
+            if ($days >= 0 && $days <= 14) {
+                $licenseDaysRemaining = (int) ceil($days);
+                
+                if (!session()->has('license_warning_shown')) {
+                    $showLicenseWarning = true;
+                    session()->put('license_warning_shown', true);
+                }
+            }
+        }
+
         return view('admin.dashboard', compact(
             'kasHariIni',
             'kasBulanIni',
@@ -310,7 +328,9 @@ class AdminDashboardController extends Controller
             'totalPenerimaanTagihan',
             'totalBelumBayarTagihan',
             'prediksiPendapatan',
-            'transaksiTerbaru'
+            'transaksiTerbaru',
+            'showLicenseWarning',
+            'licenseDaysRemaining'
         ));
     }
 }

@@ -326,6 +326,110 @@
             font-weight: 600;
             margin-top: 2px;
         }
+
+        /* Connected Devices Table Styles */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.4);
+            margin-top: 10px;
+        }
+
+        .responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .responsive-table th, .responsive-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .responsive-table th {
+            background: rgba(255, 255, 255, 0.03);
+            color: #a5b4fc;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .responsive-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .responsive-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .conn-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-wireless {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-wired {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .responsive-table {
+                border: 0;
+            }
+            
+            .responsive-table thead {
+                display: none;
+            }
+            
+            .responsive-table tr {
+                display: block;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                margin-bottom: 10px;
+                padding: 6px;
+                background: rgba(15, 23, 42, 0.2);
+            }
+            
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+                padding: 8px 10px;
+                text-align: right;
+            }
+            
+            .responsive-table td:last-child {
+                border-bottom: 0;
+            }
+            
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #a5b4fc;
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                text-align: left;
+                margin-right: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -357,16 +461,6 @@
                     @endif
                 </div>
                 <p class="hint">{{ $pppStatus['message'] }}</p>
-            </div>
-
-            <div class="info-row">
-                <span class="info-label">Paket Yang Diambil</span>
-                <span class="info-value">
-                    {{ $paket?->nama_paket ?? ('Paket #' . $pelanggan->paket) }}
-                    @if ($currentSpeed > 0)
-                        <span style="color:#94a3b8; font-size:.92rem;">({{ $currentSpeed }} Mbps)</span>
-                    @endif
-                </span>
             </div>
         </div>
 
@@ -513,16 +607,69 @@
                     </form>
                 </div>
             </div>
+
+            @if ($online)
+                @php
+                    $devices = !empty($cpe->connected_devices) ? json_decode($cpe->connected_devices, true) : [];
+                    $deviceCount = is_array($devices) ? count($devices) : 0;
+                @endphp
+                <div class="card">
+                    <div class="info-row" style="border-bottom: 1px solid rgba(148, 163, 184, .12); padding-bottom: 15px;">
+                        <span class="info-label" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; width: 100%;">
+                            <span>💻 Perangkat Terhubung (Connected Clients)</span>
+                            <span style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; border: 1px solid rgba(99, 102, 241, 0.4); text-transform: none; letter-spacing: normal; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; text-align: center;">
+                                {{ $deviceCount }} Perangkat
+                            </span>
+                        </span>
+                    </div>
+                    
+                    @if (!empty($devices))
+                        <div class="table-responsive">
+                            <table class="responsive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Perangkat</th>
+                                        <th>Alamat IP</th>
+                                        <th>Alamat MAC</th>
+                                        <th>Tipe Koneksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($devices as $device)
+                                        @php
+                                            $isWireless = isset($device['interface_type']) && (str_contains(strtolower($device['interface_type']), 'wireless') || str_contains($device['interface_type'], '802.11') || str_contains(strtolower($device['interface_type']), 'wlan'));
+                                            $connType = $isWireless ? 'Wireless' : 'Wired / LAN';
+                                            $badgeClass = $isWireless ? 'badge-wireless' : 'badge-wired';
+                                            $icon = $isWireless ? 'fa-wifi' : 'fa-ethernet';
+                                            $hostname = !empty($device['hostname']) ? $device['hostname'] : 'Perangkat Tanpa Nama';
+                                        @endphp
+                                        <tr>
+                                            <td data-label="Nama Perangkat" style="font-weight: 600; color: #f8fafc;">
+                                                {{ $hostname }}
+                                            </td>
+                                            <td data-label="Alamat IP" style="font-family: monospace;">{{ $device['ip_address'] ?? '-' }}</td>
+                                            <td data-label="Alamat MAC" style="font-family: monospace; color: #cbd5e1;">{{ $device['mac_address'] ?? '-' }}</td>
+                                            <td data-label="Tipe Koneksi">
+                                                <span class="conn-type-badge {{ $badgeClass }}">
+                                                    <i class="fa-solid {{ $icon }}"></i> {{ $connType }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div style="text-align: center; padding: 24px; color: #94a3b8; font-style: italic;">
+                            <i class="fa-solid fa-circle-info" style="font-size: 1.25rem; margin-bottom: 8px; display: block; color: #a5b4fc;"></i>
+                            Tidak ada perangkat yang terdeteksi terhubung saat ini.
+                        </div>
+                    @endif
+                </div>
+            @endif
         @endif
 
-        <section class="upgrade-section">
-            <h3>Upgrade Paket</h3>
-            <p>Pilihan paket 20 Mbps dan 30 Mbps.</p>
-            @include('partials.paket-cards', [
-                'paketList' => $paketUpgrade,
-                'emptyMessage' => 'Paket 20 Mb dan 30 Mb belum tersedia.',
-            ])
-        </section>
+
         @include('partials.bottom-nav')
     </div>
     

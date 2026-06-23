@@ -165,6 +165,15 @@ class AdminPelangganController extends Controller
             'id_sub_branch' => 'nullable|integer',
         ]);
 
+        // Cek limit maksimum pelanggan berdasarkan lisensi
+        $profile = DB::table('tb_profile')->where('id_profile', 1)->first();
+        if ($profile && $profile->license_status === 'active' && $profile->license_max_clients > 0) {
+            $currentCustomersCount = DB::table('tb_pelanggan')->count();
+            if ($currentCustomersCount >= $profile->license_max_clients) {
+                return back()->withErrors(['error' => "Batas maksimum pelanggan untuk paket lisensi Anda ({$profile->license_plan_name}) telah tercapai ({$profile->license_max_clients} pelanggan). Silakan tingkatkan paket lisensi Anda."])->withInput();
+            }
+        }
+
         $username = htmlspecialchars(strip_tags($request->username));
         $password = htmlspecialchars(strip_tags($request->password));
         $nik = htmlspecialchars(strip_tags($request->nik ?? ''));

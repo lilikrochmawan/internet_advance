@@ -56,6 +56,10 @@ Route::prefix('administrator')->group(function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+        
+        // Halaman Lisensi Kadaluarsa / Belum Aktif
+        Route::get('/unlicensed', [AdminPengaturanController::class, 'showUnlicensed'])->name('admin.unlicensed');
+        Route::post('/unlicensed', [AdminPengaturanController::class, 'activateLicense'])->name('admin.unlicensed.activate');
 
         // CRUD Pelanggan
         Route::get('/pelanggan', [AdminPelangganController::class, 'index'])->name('admin.pelanggan.index');
@@ -124,6 +128,7 @@ Route::prefix('administrator')->group(function () {
         Route::post('/pengaturan/token', [AdminPengaturanController::class, 'updateToken'])->name('admin.pengaturan.token');
         Route::post('/pengaturan/midtrans', [AdminPengaturanController::class, 'updateMidtrans'])->name('admin.pengaturan.midtrans');
         Route::post('/pengaturan/jatuh-tempo', [AdminPengaturanController::class, 'updateJatuhTempo'])->name('admin.pengaturan.jatuh_tempo');
+        Route::post('/pengaturan/license', [AdminPengaturanController::class, 'updateLicense'])->name('admin.pengaturan.license');
         Route::get('/pengaturan/backup', [AdminPengaturanController::class, 'backupDb'])->name('admin.pengaturan.backup');
 
         // Pengaturan Client (Branch & Staff Access)

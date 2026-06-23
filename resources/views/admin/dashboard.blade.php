@@ -833,4 +833,36 @@
         }
     });
 </script>
+
+@if($showLicenseWarning)
+<!-- Modal Warning Jatuh Tempo Lisensi -->
+<div class="modal fade" id="licenseWarningModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border: none; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); background: white;">
+            <div class="modal-body text-center p-5">
+                <div class="d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; background-color: #fffbeb; color: #d97706; border-radius: 20px; font-size: 2.5rem; box-shadow: 0 10px 15px -3px rgba(217, 119, 6, 0.1);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h4 class="fw-bold mb-2 text-dark" style="font-family: 'Outfit', sans-serif;">Peringatan Lisensi!</h4>
+                <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.5;">
+                    Masa berlaku lisensi program billing internet Anda akan segera habis dalam waktu <b>{{ $licenseDaysRemaining }} hari</b> lagi. Harap segera lakukan perpanjangan lisensi agar operasional billing tetap berjalan normal.
+                </p>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-light w-100 py-2.5 rounded-3 fw-semibold" data-bs-dismiss="modal" style="font-size: 0.9rem; border: 1px solid #e2e8f0;">Nanti Saja</button>
+                    <a href="{{ route('admin.pengaturan.index') }}" class="btn btn-warning w-100 py-2.5 rounded-3 text-white fw-semibold" style="font-size: 0.9rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;">
+                        Perbarui Lisensi <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var myModal = new bootstrap.Modal(document.getElementById('licenseWarningModal'));
+        myModal.show();
+    });
+</script>
+@endif
 @endsection

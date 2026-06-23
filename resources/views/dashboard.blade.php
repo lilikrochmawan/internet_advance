@@ -786,7 +786,7 @@
             <!-- Desktop Navigation Links (Indonesian) -->
             <div class="topbar-nav">
                 <a href="{{ route('dashboard') }}" class="nav-item active">Dashboard</a>
-                <a href="{{ route('network.status') }}" class="nav-item">Akun</a>
+                <a href="{{ route('network.status') }}" class="nav-item">Status</a>
                 <a href="{{ route('keluhan.index') }}" class="nav-item">Tiket</a>
             </div>
 
@@ -858,7 +858,7 @@
                             </div>
                         </div>
                         <!-- Secondary Action Icon: Document icon matching mockup top-right -->
-                        <a href="{{ route('network.status') }}" class="card-action-icon" title="Detail Akun & WiFi">
+                        <a href="{{ route('network.status') }}" class="card-action-icon" title="Status Jaringan & WiFi">
                             <i class="fa-regular fa-file-lines"></i>
                         </a>
                     </div>

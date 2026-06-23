@@ -16,3 +16,6 @@ Schedule::command('app:send-auto-billing-notifications')->dailyAt('08:00');
 
 // Jadwal generate transaksi bulanan setiap tanggal 1 pukul 01.00 wib
 Schedule::command('app:generate-bulanan-tagihan')->monthlyOn(1, '01:00')->timezone('Asia/Jakarta');
+
+// Jadwal pemeriksaan lisensi otomatis setiap hari pukul 00.00 wib
+Schedule::command('license:check')->dailyAt('00:00')->timezone('Asia/Jakarta');

@@ -527,6 +527,73 @@
                 </div>
             </form>
         </div>
+
+        <!-- Card 5: Pengaturan Lisensi Aplikasi -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Lisensi Aplikasi Billing</span>
+                </div>
+            </div>
+            
+            <form action="{{ route('admin.pengaturan.license') }}" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label for="license_key">License Key *</label>
+                    <input type="text" id="license_key" name="license_key" class="form-control" value="{{ $profile->license_key ?? '' }}" required placeholder="BILL-XXXX-XXXX-XXXX-XXXX">
+                </div>
+
+                <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Status Lisensi:</span>
+                        <span style="font-weight: 700; color: {{ ($profile->license_status ?? '') === 'active' ? '#10b981' : '#ef4444' }}; text-transform: uppercase;">
+                            {{ $profile->license_status ?? 'INVALID' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Nama Pelanggan:</span>
+                        <span style="font-weight: 700; color: #334155;">
+                            {{ $profile->license_client_name ?? '-' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Paket Lisensi:</span>
+                        <span style="font-weight: 700; color: var(--primary);">
+                            {{ $profile->license_plan_name ?? 'Lite' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Batas Pelanggan:</span>
+                        <span style="font-weight: 600; color: {{ (($profile->license_max_clients ?? 250) > 0 && DB::table('tb_pelanggan')->count() >= ($profile->license_max_clients ?? 250)) ? '#ef4444' : '#0f172a' }};">
+                            {{ DB::table('tb_pelanggan')->count() }} / {{ ($profile->license_max_clients ?? 250) > 0 ? ($profile->license_max_clients ?? 250) : 'Unlimited' }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Masa Berlaku:</span>
+                        <span style="font-weight: 600;">
+                            @if(empty($profile->license_expires_at))
+                                {{ !empty($profile->license_key) && ($profile->license_status ?? '') === 'active' ? 'Lifetime (Seumur Hidup)' : '-' }}
+                            @else
+                                {{ \Carbon\Carbon::parse($profile->license_expires_at)->format('d-m-Y H:i') }}
+                            @endif
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding-bottom: 6px;">
+                        <span style="color: var(--text-gray); font-weight: 500;">Pengecekan Terakhir:</span>
+                        <span style="font-weight: 500; color: var(--text-gray);">
+                            {{ $profile->license_last_checked ? \Carbon\Carbon::parse($profile->license_last_checked)->format('d-m-Y H:i') : 'Belum pernah' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-unlock"></i> Simpan & Verifikasi
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

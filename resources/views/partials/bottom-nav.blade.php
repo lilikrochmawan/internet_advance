@@ -73,8 +73,8 @@
         <span>Dashboard</span>
     </a>
     <a href="{{ route('network.status') }}" class="bottom-nav-item {{ request()->routeIs('network.status') ? 'active' : '' }}">
-        <i class="fa-solid fa-key"></i>
-        <span>Akun</span>
+        <i class="fa-solid fa-wifi"></i>
+        <span>Status</span>
     </a>
     <a href="{{ route('keluhan.index') }}" class="bottom-nav-item {{ request()->routeIs('keluhan.*') ? 'active' : '' }}">
         <i class="fa-solid fa-ticket"></i>

@@ -311,4 +311,109 @@ class AdminPengaturanController extends Controller
 
         return redirect()->route('admin.pengaturan.index')->with('success', $msg);
     }
+
+    public function showUnlicensed()
+    {
+        $profile = DB::table('tb_profile')->where('id_profile', 1)->first();
+        return view('errors.unlicensed', compact('profile'));
+    }
+
+    public function activateLicense(Request $request)
+    {
+        $request->validate([
+            'license_key' => 'required|string',
+        ]);
+
+        $result = $this->verifyLicenseWithServer($request->license_key);
+
+        if ($result['success']) {
+            return redirect()->route('admin.dashboard')->with('success', 'Lisensi berhasil diaktifkan! Aplikasi billing kini aktif.');
+        }
+
+        return back()->withErrors(['license_key' => $result['message']]);
+    }
+
+    public function updateLicense(Request $request)
+    {
+        $request->validate([
+            'license_key' => 'required|string',
+        ]);
+
+        $result = $this->verifyLicenseWithServer($request->license_key);
+
+        if ($result['success']) {
+            return redirect()->route('admin.pengaturan.index')->with('success', 'License Key berhasil diperbarui dan divalidasi!');
+        }
+
+        return back()->withErrors(['license_key' => $result['message']]);
+    }
+
+    private function verifyLicenseWithServer($licenseKey)
+    {
+        $serverUrl = env('LICENSE_SERVER_URL', 'http://localhost:8000');
+        $appUrl = config('app.url', 'localhost');
+        $domain = parse_url($appUrl, PHP_URL_HOST) ?: 'localhost';
+
+        $ipAddress = '127.0.0.1';
+        try {
+            $responseIp = \Illuminate\Support\Facades\Http::timeout(3)->get('https://api.ipify.org');
+            if ($responseIp->successful()) {
+                $ipAddress = trim($responseIp->body());
+            }
+        } catch (\Exception $e) {
+            $ipAddress = gethostbyname(gethostname()) ?: '127.0.0.1';
+        }
+
+        try {
+            $apiUrl = rtrim($serverUrl, '/') . '/api/license/verify';
+            $response = \Illuminate\Support\Facades\Http::timeout(10)->post($apiUrl, [
+                'license_key' => $licenseKey,
+                'domain' => $domain,
+                'ip_address' => $ipAddress,
+            ]);
+
+            $data = $response->json();
+
+            if ($response->successful() && isset($data['status']) && $data['status'] === 'active') {
+                $expiresAt = $data['expires_at'] !== 'lifetime' 
+                    ? \Illuminate\Support\Carbon::parse($data['expires_at']) 
+                    : null;
+
+                DB::table('tb_profile')->where('id_profile', 1)->update([
+                    'license_key' => $licenseKey,
+                    'license_status' => 'active',
+                    'license_expires_at' => $expiresAt,
+                    'license_plan_name' => $data['plan_name'] ?? 'Lite',
+                    'license_max_clients' => intval($data['max_clients'] ?? 250),
+                    'license_client_name' => $data['client_name'] ?? null,
+                    'license_last_checked' => \Illuminate\Support\Carbon::now(),
+                ]);
+
+                return [
+                    'success' => true,
+                    'message' => 'Lisensi aktif.'
+                ];
+            }
+
+            $status = $data['status'] ?? 'invalid';
+            $msg = $data['message'] ?? 'Lisensi tidak valid.';
+            
+            DB::table('tb_profile')->where('id_profile', 1)->update([
+                'license_key' => $licenseKey,
+                'license_status' => $status,
+                'license_last_checked' => \Illuminate\Support\Carbon::now(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $msg
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Gagal menghubungi server lisensi untuk verifikasi: ' . $e->getMessage()
+            ];
+        }
+    }
 }
