@@ -331,6 +331,7 @@
             </div>
         </div>
     </div>
+    @include('partials.bottom-nav')
 </div>
 
 @if(!$invoices->isEmpty())

@@ -159,6 +159,23 @@ class MikrotikService
             $bytesIn = $ac ? (int)($ac['bytes-in'] ?? 0) : 0;
             $bytesOut = $ac ? (int)($ac['bytes-out'] ?? 0) : 0;
 
+            // Retrieve data from interface `<pppoe-username>` as requested
+            try {
+                $interfaceName = '<pppoe-' . $pppUsername . '>';
+                $interfaces = $api->comm('/interface/print', [
+                    '?name' => $interfaceName,
+                ]);
+                if (!empty($interfaces)) {
+                    $intf = $interfaces[0];
+                    // Rx on Mikrotik PPPoE interface is client Upload (bytes_in)
+                    $bytesIn = isset($intf['rx-byte']) ? (int)$intf['rx-byte'] : $bytesIn;
+                    // Tx on Mikrotik PPPoE interface is client Download (bytes_out)
+                    $bytesOut = isset($intf['tx-byte']) ? (int)$intf['tx-byte'] : $bytesOut;
+                }
+            } catch (\Exception $ex) {
+                Log::warning("Gagal mengambil bytes dari interface $interfaceName: " . $ex->getMessage());
+            }
+
             if ($profile === 'pppoe-isolir') {
                 return [
                     'online' => false,

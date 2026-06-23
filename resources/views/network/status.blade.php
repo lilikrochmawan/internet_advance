@@ -523,6 +523,7 @@
                 'emptyMessage' => 'Paket 20 Mb dan 30 Mb belum tersedia.',
             ])
         </section>
+        @include('partials.bottom-nav')
     </div>
     
     <script>

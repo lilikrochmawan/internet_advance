@@ -132,4 +132,27 @@ class AuthController extends Controller
 
         return response()->json($stats);
     }
+
+    public function profil()
+    {
+        $user = Auth::user();
+        $pelanggan = $user->pelanggan;
+        
+        if (!$pelanggan) {
+            abort(404, 'Pelanggan tidak ditemukan.');
+        }
+
+        $pelangganIds = $this->tagihanService->getPelangganIdsByPhone($pelanggan->no_telp);
+        $tagihanBulanIni = $this->tagihanService->sumUnpaidBulanIni($pelangganIds);
+        $tagihanManual = $this->tagihanService->sumUnpaidManual($pelangganIds);
+        $tagihanTotal = $tagihanBulanIni + $tagihanManual;
+        
+        $statusPaket = ($tagihanTotal > 0) ? 'Terisolir' : 'Aktif';
+
+        return view('profile', [
+            'user' => $user,
+            'pelanggan' => $pelanggan,
+            'statusPaket' => $statusPaket,
+        ]);
+    }
 }

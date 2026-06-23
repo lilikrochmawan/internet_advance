@@ -207,6 +207,7 @@
                 <button type="submit" class="submit-button">Submit Laporan</button>
             </form>
         </div>
+        @include('partials.bottom-nav')
     </div>
 </body>
 </html>

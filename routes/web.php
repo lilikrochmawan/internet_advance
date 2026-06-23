@@ -22,6 +22,7 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::get('/laporan', [KeluhanController::class, 'index'])->name('keluhan.index');
     Route::get('/laporan/buat', [KeluhanController::class, 'create'])->name('keluhan.create');
     Route::post('/laporan/buat', [KeluhanController::class, 'store'])->name('keluhan.store');
+    Route::get('/profil', [AuthController::class, 'profil'])->name('profile');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 

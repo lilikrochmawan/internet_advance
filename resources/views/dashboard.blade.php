@@ -800,9 +800,7 @@
                     @endif
                 </button>
                 <!-- Logout Button -->
-                <form method="POST" action="{{ route('logout') }}" id="logout-form" style="display:none;">
-                    @csrf
-                </form>
+
                 <button type="button" class="topbar-icon" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.25);" onclick="document.getElementById('logout-form').submit()" title="Keluar">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
@@ -926,7 +924,7 @@
                 <div class="card">
                     <div class="card-title-with-icon">
                         <span>🚀</span>
-                        <span>Penggunaan Bulan Ini</span>
+                        <span>Kuota Unlimited</span>
                     </div>
 
                     <!-- Download Usage -->
@@ -1000,7 +998,7 @@
                 <!-- Quick Action Buttons in Indonesian -->
                 <div class="actions-row">
                     <a href="{{ route('keluhan.create') }}" class="action-item-card">
-                        <span><i class="fa-solid fa-bug-slash" style="color:#f43f5e;"></i></span>
+                        <span><i class="fa-solid fa-headset" style="color:#f43f5e;"></i></span>
                         <p>Lapor Gangguan</p>
                     </a>
                     <a href="{{ route('network.status') }}" class="action-item-card">
@@ -1019,31 +1017,8 @@
             </div>
         </div>
 
-        <!-- Footer version info in Indonesian -->
-        <div class="footer">
-            &copy; {{ date('Y') }} {{ $profile->nama_sekolah ?? 'BILLING INTERNET' }}. Versi 2.1 | Oleh Lotus Computama Teknik. (Dilindungi hak cipta)
-        </div>
+        @include('partials.bottom-nav')
     </div>
-
-    <!-- Mobile Bottom Navigation Bar in Indonesian -->
-    <nav class="bottom-nav">
-        <a href="{{ route('dashboard') }}" class="bottom-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <i class="fa-solid fa-gauge"></i>
-            <span>Dashboard</span>
-        </a>
-        <a href="{{ route('network.status') }}" class="bottom-nav-item {{ request()->routeIs('network.status') ? 'active' : '' }}">
-            <i class="fa-solid fa-key"></i>
-            <span>Akun</span>
-        </a>
-        <a href="{{ route('keluhan.index') }}" class="bottom-nav-item {{ request()->routeIs('keluhan.*') ? 'active' : '' }}">
-            <i class="fa-solid fa-ticket"></i>
-            <span>Tiket</span>
-        </a>
-        <a href="#" class="bottom-nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="fa-solid fa-user"></i>
-            <span>Profil</span>
-        </a>
-    </nav>
 
     <!-- AJAX script to load live session stats and Uptime from router -->
     <script>
