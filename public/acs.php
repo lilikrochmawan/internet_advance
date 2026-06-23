@@ -98,8 +98,9 @@ function formatOpticalPower($name, $value, $isRx) {
         return number_format($valFloat, 2) . ' dBm';
     }
     
-    // Check if it's EPON / ZTE 0.1 uW format
-    if (strpos($name, 'EponInterfaceConfig') !== false || strpos($name, 'GponInterfaceConfig') !== false) {
+    // Check if it's EPON / ZTE 0.1 uW format (case-insensitive to support China Unicom X_CU_WANEPONInterfaceConfig etc.)
+    $nameLower = strtolower($name);
+    if (strpos($nameLower, 'eponinterfaceconfig') !== false || strpos($nameLower, 'gponinterfaceconfig') !== false) {
         if ($valFloat <= 0) {
             return $isRx ? '-40.00 dBm (No Signal)' : '-inf dBm';
         }
@@ -180,6 +181,8 @@ function handleInform($koneksi, $xpath, $messageId) {
     $pppoeStatus = null;
     $wifiSsid24 = null;
     $wifiSsid5 = null;
+    $wifiChannel24 = null;
+    $wifiChannel5 = null;
     $itmsUsername = null;
 
     // Loop through parameters list
@@ -229,13 +232,49 @@ function handleInform($koneksi, $xpath, $messageId) {
                 $wifiSsid24 = $value;
             } else {
                 $mfgLower = strtolower($manufacturer);
-                if ($mfgLower === 'cdt') {
-                    if ($index === 2) {
+                $isCData = ($mfgLower === 'cdt' || $mfgLower === 'cdata' || $mfgLower === 'c-data');
+                if ($isCData) {
+                    if ($index === 6) {
                         $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    } elseif ($index === 5 && empty($wifiSsid5)) {
+                        $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    } elseif ($index === 2 && empty($wifiSsid5)) {
+                        $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
                     }
                 } else {
-                    if (in_array($index, [5, 9])) {
+                    if ($index === 6) {
                         $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    } elseif (in_array($index, [5, 9]) && empty($wifiSsid5)) {
+                        $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    }
+                }
+            }
+        }
+
+        // Extract WiFi Channels (2.4GHz and 5GHz)
+        if (preg_match('/(WLANConfiguration|WiFi\.Radio|WiFi\.SSID)\.(\d+)\.Channel$/i', $name, $matches)) {
+            $index = intval($matches[2]);
+            if ($index === 1) {
+                $wifiChannel24 = $value;
+            } else {
+                $mfgLower = strtolower($manufacturer);
+                $isCData = ($mfgLower === 'cdt' || $mfgLower === 'cdata' || $mfgLower === 'c-data');
+                if ($isCData) {
+                    if ($index === 6) {
+                        $wifiChannel5 = $value;
+                    } elseif ($index === 5 && empty($wifiChannel5)) {
+                        $wifiChannel5 = $value;
+                    } elseif ($index === 2 && empty($wifiChannel5)) {
+                        $wifiChannel5 = $value;
+                    }
+                } else {
+                    if (in_array($index, [5, 6, 9])) {
+                        $wifiChannel5 = $value;
                     }
                 }
             }
@@ -278,7 +317,14 @@ function handleInform($koneksi, $xpath, $messageId) {
         if ($pppoeUsername !== null) $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
         if ($pppoeStatus !== null) $updateFields[] = "pppoe_status = '" . $koneksi->real_escape_string($pppoeStatus) . "'";
         if ($wifiSsid24 !== null) $updateFields[] = "wifi_ssid_24 = '" . $koneksi->real_escape_string($wifiSsid24) . "'";
-        if ($wifiSsid5 !== null) $updateFields[] = "wifi_ssid_5 = '" . $koneksi->real_escape_string($wifiSsid5) . "'";
+        if ($wifiSsid5 !== null) {
+            $updateFields[] = "wifi_ssid_5 = '" . $koneksi->real_escape_string($wifiSsid5) . "'";
+            if (isset($_SESSION['wifi_ssid_5_index'])) {
+                $updateFields[] = "wifi_ssid_5_index = " . (int)$_SESSION['wifi_ssid_5_index'];
+            }
+        }
+        if ($wifiChannel24 !== null) $updateFields[] = "wifi_channel_24 = '" . $koneksi->real_escape_string($wifiChannel24) . "'";
+        if ($wifiChannel5 !== null) $updateFields[] = "wifi_channel_5 = '" . $koneksi->real_escape_string($wifiChannel5) . "'";
 
         $koneksi->query("UPDATE tb_cpe SET " . implode(", ", $updateFields) . " WHERE serial_number = '$escapedSerial'");
     } else {
@@ -308,6 +354,18 @@ function handleInform($koneksi, $xpath, $messageId) {
         if ($wifiSsid5 !== null) {
             $insertCols[] = 'wifi_ssid_5';
             $insertVals[] = "'" . $koneksi->real_escape_string($wifiSsid5) . "'";
+            if (isset($_SESSION['wifi_ssid_5_index'])) {
+                $insertCols[] = 'wifi_ssid_5_index';
+                $insertVals[] = (int)$_SESSION['wifi_ssid_5_index'];
+            }
+        }
+        if ($wifiChannel24 !== null) {
+            $insertCols[] = 'wifi_channel_24';
+            $insertVals[] = "'" . $koneksi->real_escape_string($wifiChannel24) . "'";
+        }
+        if ($wifiChannel5 !== null) {
+            $insertCols[] = 'wifi_channel_5';
+            $insertVals[] = "'" . $koneksi->real_escape_string($wifiChannel5) . "'";
         }
         
         $koneksi->query("INSERT INTO tb_cpe (" . implode(", ", $insertCols) . ") VALUES (" . implode(", ", $insertVals) . ")");
@@ -370,6 +428,7 @@ function handleEmptyPost($koneksi, $messageId) {
             $mfgRow = $mfgQuery->fetch_assoc();
             $mfg = strtolower(trim($mfgRow['manufacturer']));
         }
+        $isCData = ($mfg === 'cdt' || $mfg === 'cdata' || $mfg === 'c-data');
 
         $pathsToQuery = [];
         
@@ -385,11 +444,16 @@ function handleEmptyPost($koneksi, $messageId) {
                 'Device.X_CT-COM_UserInfo.UserName',
                 'Device.X_CT-COM_UserInfo.UserId'
             ];
-            if ($mfg === 'cdt') {
+            if ($isCData) {
                 $pathsToQuery[] = 'Device.WiFi.SSID.2.SSID';
+                $pathsToQuery[] = 'Device.WiFi.SSID.5.SSID';
+                $pathsToQuery[] = 'Device.WiFi.SSID.6.SSID';
             } else {
                 $pathsToQuery[] = 'Device.WiFi.SSID.5.SSID';
+                $pathsToQuery[] = 'Device.WiFi.SSID.6.SSID';
             }
+            $pathsToQuery[] = 'Device.WiFi.Radio.1.Channel';
+            $pathsToQuery[] = 'Device.WiFi.Radio.2.Channel';
             $pathsToQuery = array_merge($pathsToQuery, [
                 'Device.Optical.Interface.1.Stats.RxOpticalPower',
                 'Device.Optical.Interface.1.Stats.TxOpticalPower',
@@ -409,10 +473,22 @@ function handleEmptyPost($koneksi, $messageId) {
                 'InternetGatewayDevice.X_CT-COM_UserInfo.UserName',
                 'InternetGatewayDevice.X_CT-COM_UserInfo.UserId'
             ];
-            if ($mfg === 'cdt') {
+            if ($isCData) {
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.SSID';
             } else {
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.SSID';
+            }
+            $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel';
+            if ($isCData) {
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.Channel';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.Channel';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.Channel';
+            } else {
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.Channel';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.Channel';
             }
             $pathsToQuery = array_merge($pathsToQuery, [
                 'InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower',
@@ -431,6 +507,10 @@ function handleEmptyPost($koneksi, $messageId) {
                 'InternetGatewayDevice.X_GPON.Diagnostics.OpticalInformation.RxOpticalPower',
                 'InternetGatewayDevice.X_HW_OpticalDiagnostics.RxPower',
                 'InternetGatewayDevice.X_ZTE_Dslh.OpticalDiagnostics.RxPower',
+                'InternetGatewayDevice.WANDevice.1.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.RXPower',
+                'InternetGatewayDevice.WANDevice.1.X_CU_WANEPONInterfaceConfig.OpticalTransceiver.TXPower',
+                'InternetGatewayDevice.WANDevice.1.X_CU_WANGPONInterfaceConfig.OpticalTransceiver.RXPower',
+                'InternetGatewayDevice.WANDevice.1.X_CU_WANGPONInterfaceConfig.OpticalTransceiver.TXPower',
                 'InternetGatewayDevice.Hosts.',
                 'InternetGatewayDevice.LANDevice.1.Hosts.'
             ]);
@@ -564,6 +644,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             $mfgRow = $mfgQuery->fetch_assoc();
             $mfg = strtolower(trim($mfgRow['manufacturer']));
         }
+        $isCData = ($mfg === 'cdt' || $mfg === 'cdata' || $mfg === 'c-data');
         
         $rxPower = null;
         $txPower = null;
@@ -571,6 +652,8 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
         $pppoeStatus = null;
         $wifiSsid24 = null;
         $wifiSsid5 = null;
+        $wifiChannel24 = null;
+        $wifiChannel5 = null;
         $itmsUsername = null;
         
         $pppoeConnections = [];
@@ -622,13 +705,58 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                 if ($index === 1) {
                     $wifiSsid24 = $value;
                 } else {
-                    if ($mfg === 'cdt') {
-                        if ($index === 2) {
+                    if ($isCData) {
+                        // CData dual-band uses index 6 for 5GHz, older models may use index 5 or 2.
+                        // We prioritize index 6, then index 5, then index 2.
+                        if ($index === 6) {
                             $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        } elseif ($index === 5 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                            $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        } elseif ($index === 2 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                            $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
                         }
                     } else {
-                        if (in_array($index, [5, 9])) {
+                        // For non-CData, prefer index 6, then 5, then 9
+                        if ($index === 6) {
                             $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        } elseif ($index === 5 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                            $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        } elseif ($index === 9 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                            $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        }
+                    }
+                }
+            }
+
+            // Extract WiFi Channels
+            if (preg_match('/(WLANConfiguration|WiFi\.Radio|WiFi\.SSID)\.(\d+)\.Channel$/i', $name, $matches)) {
+                $index = intval($matches[2]);
+                if ($index === 1) {
+                    $wifiChannel24 = $value;
+                } else {
+                    if ($isCData) {
+                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 6;
+                        if ($index === $active5gIndex || ($index === 6 && empty($wifiChannel5))) {
+                            $wifiChannel5 = $value;
+                        } elseif ($index === 5 && empty($wifiChannel5)) {
+                            $wifiChannel5 = $value;
+                        } elseif ($index === 2 && empty($wifiChannel5)) {
+                            $wifiChannel5 = $value;
+                        }
+                    } else {
+                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 5;
+                        if ($index === $active5gIndex || ($index === 5 && empty($wifiChannel5))) {
+                            $wifiChannel5 = $value;
+                        } elseif ($index === 6 && empty($wifiChannel5)) {
+                            $wifiChannel5 = $value;
+                        } elseif ($index === 9 && empty($wifiChannel5)) {
+                            $wifiChannel5 = $value;
                         }
                     }
                 }
@@ -682,21 +810,25 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
         if ($pppoeUsername !== null) $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
         if ($pppoeStatus !== null) $updateFields[] = "pppoe_status = '" . $koneksi->real_escape_string($pppoeStatus) . "'";
         if ($wifiSsid24 !== null) $updateFields[] = "wifi_ssid_24 = '" . $koneksi->real_escape_string($wifiSsid24) . "'";
-        if ($wifiSsid5 !== null) $updateFields[] = "wifi_ssid_5 = '" . $koneksi->real_escape_string($wifiSsid5) . "'";
+        if ($wifiSsid5 !== null) {
+            $updateFields[] = "wifi_ssid_5 = '" . $koneksi->real_escape_string($wifiSsid5) . "'";
+            if (isset($_SESSION['wifi_ssid_5_index'])) {
+                $updateFields[] = "wifi_ssid_5_index = " . (int)$_SESSION['wifi_ssid_5_index'];
+            }
+        }
+        if ($wifiChannel24 !== null) $updateFields[] = "wifi_channel_24 = '" . $koneksi->real_escape_string($wifiChannel24) . "'";
+        if ($wifiChannel5 !== null) $updateFields[] = "wifi_channel_5 = '" . $koneksi->real_escape_string($wifiChannel5) . "'";
         
         if (!empty($hostsList)) {
             $activeHosts = [];
             foreach ($hostsList as $idx => $host) {
                 if (!empty($host['macaddress']) || !empty($host['ipaddress'])) {
-                    $isActive = isset($host['active']) ? (strtolower($host['active']) === 'true' || $host['active'] == '1') : true;
-                    if ($isActive) {
-                        $activeHosts[] = [
-                            'hostname' => $host['hostname'] ?? '-',
-                            'ip_address' => $host['ipaddress'] ?? '-',
-                            'mac_address' => $host['macaddress'] ?? '-',
-                            'interface_type' => $host['interfacetype'] ?? '-',
-                        ];
-                    }
+                    $activeHosts[] = [
+                        'hostname' => $host['hostname'] ?? '-',
+                        'ip_address' => $host['ipaddress'] ?? '-',
+                        'mac_address' => $host['macaddress'] ?? '-',
+                        'interface_type' => $host['interfacetype'] ?? '-',
+                    ];
                 }
             }
             $updateFields[] = "connected_devices = '" . $koneksi->real_escape_string(json_encode($activeHosts)) . "'";

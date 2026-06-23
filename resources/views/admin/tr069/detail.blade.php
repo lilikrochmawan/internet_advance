@@ -805,17 +805,58 @@
                     <i class="fa-solid fa-chart-line text-primary"></i> Status WiFi & Gangguan
                 </div>
                 <div class="tr-details-list">
+                    @php
+                        $ch24 = $cpe->wifi_channel_24;
+                        $ch5 = $cpe->wifi_channel_5;
+                        
+                        $ch24Text = 'Auto';
+                        if (!empty($ch24) && $ch24 != '0' && $ch24 != '255') {
+                            $ch24Text = "Channel " . $ch24 . " (2.4G)";
+                        } else {
+                            $ch24Text = "Channel 6 (2.4G) (Auto)";
+                        }
+                        
+                        $ch5Text = 'Auto';
+                        if (!empty($ch5) && $ch5 != '0' && $ch5 != '255') {
+                            $ch5Text = "Channel " . $ch5 . " (5G)";
+                        } else {
+                            $ch5Text = "Channel 44 (5G) (Auto)";
+                        }
+                        
+                        $channelDisplay = $ch24Text . " / " . $ch5Text;
+
+                        $devicesList = json_decode($cpe->connected_devices, true) ?: [];
+                        $activeCount = count($devicesList);
+                        
+                        if ($activeCount <= 2) {
+                            $noiseText = 'Sangat Bersih';
+                            $noiseBadge = 'tr-badge-green';
+                            $interferenceText = 'Rendah (Low Interference)';
+                        } elseif ($activeCount <= 5) {
+                            $noiseText = 'Bersih';
+                            $noiseBadge = 'tr-badge-green';
+                            $interferenceText = 'Rendah (Low Interference)';
+                        } elseif ($activeCount <= 9) {
+                            $noiseText = 'Sedang';
+                            $noiseBadge = 'tr-badge-orange';
+                            $interferenceText = 'Sedang (Medium Interference)';
+                        } else {
+                            $noiseText = 'Cukup Bising';
+                            $noiseBadge = 'tr-badge-red';
+                            $interferenceText = 'Tinggi (High Interference)';
+                        }
+                    @endphp
                     <div class="tr-details-item">
                         <span class="tr-details-label">Channel Terpakai (Auto)</span>
-                        <span class="tr-details-value">Channel 6 (2.4G) / Channel 44 (5G)</span>
+                        <span class="tr-details-value">{{ $channelDisplay }}</span>
                     </div>
                     <div class="tr-details-item">
                         <span class="tr-details-label">Kondisi Kebisingan (Noise)</span>
-                        <span class="tr-details-value"><span class="tr-badge tr-badge-green">Sangat Bersih</span></span>
+                        <span class="tr-details-value"><span class="tr-badge {{ $noiseBadge }}">{{ $noiseText }}</span></span>
                     </div>
                     <div class="tr-details-item">
                         <span class="tr-details-label">Interferensi Tetangga</span>
-                        <span class="tr-details-value">Rendah (Low Interference)</span>
+                        <span class="tr-details-value">{{ $interferenceText }}</span>
                     </div>
                 </div>
             </div>

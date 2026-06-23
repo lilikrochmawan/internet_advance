@@ -179,7 +179,11 @@ class AdminAcsController extends Controller
         $params = [];
 
         $mfg = strtolower(trim($cpe->manufacturer));
-        $index5g = $mfg === 'cdt' ? 2 : 5;
+        if (!empty($cpe->wifi_ssid_5_index)) {
+            $index5g = (int) $cpe->wifi_ssid_5_index;
+        } else {
+            $index5g = ($mfg === 'cdt' || $mfg === 'cdata' || $mfg === 'c-data') ? 6 : 5;
+        }
 
         if ($paramType === 'tr098') {
             $ssid = $request->tr098_ssid;
