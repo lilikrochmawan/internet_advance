@@ -14,6 +14,7 @@ Route::post('/payment/notification', [PaymentController::class, 'notification'])
 
 Route::middleware(['auth', 'client'])->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/router-stats', [AuthController::class, 'getRouterStats'])->name('dashboard.router_stats');
     Route::get('/payment/detail', [PaymentController::class, 'detail'])->name('payment.detail');
     Route::post('/payment/charge', [PaymentController::class, 'charge'])->name('payment.charge');
     Route::get('/jaringan/status', [NetworkStatusController::class, 'index'])->name('network.status');

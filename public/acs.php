@@ -180,6 +180,7 @@ function handleInform($koneksi, $xpath, $messageId) {
     $pppoeStatus = null;
     $wifiSsid24 = null;
     $wifiSsid5 = null;
+    $itmsUsername = null;
 
     // Loop through parameters list
     $paramNodes = $xpath->query('//cwmp:Inform/ParameterList/ParameterValueStruct');
@@ -210,6 +211,8 @@ function handleInform($koneksi, $xpath, $messageId) {
             if (empty($pppoeUsername)) {
                 $pppoeUsername = $value;
             }
+        } elseif (strpos($name, 'X_CT-COM_UserInfo.UserName') !== false || strpos($name, 'X_CT-COM_UserInfo.UserId') !== false) {
+            $itmsUsername = $value;
         }
         
         // Extract PPPoE Connection Status
@@ -236,6 +239,13 @@ function handleInform($koneksi, $xpath, $messageId) {
                     }
                 }
             }
+        }
+    }
+
+    if (empty($pppoeUsername) && !empty($itmsUsername)) {
+        $pppoeUsername = $itmsUsername;
+        if (empty($pppoeStatus)) {
+            $pppoeStatus = 'Connected';
         }
     }
 
@@ -372,6 +382,8 @@ function handleEmptyPost($koneksi, $messageId) {
                 'Device.PPP.Interface.3.Username',
                 'Device.PPP.Interface.3.ConnectionStatus',
                 'Device.WiFi.SSID.1.SSID',
+                'Device.X_CT-COM_UserInfo.UserName',
+                'Device.X_CT-COM_UserInfo.UserId'
             ];
             if ($mfg === 'cdt') {
                 $pathsToQuery[] = 'Device.WiFi.SSID.2.SSID';
@@ -394,6 +406,8 @@ function handleEmptyPost($koneksi, $messageId) {
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.Username',
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.ConnectionStatus',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
+                'InternetGatewayDevice.X_CT-COM_UserInfo.UserName',
+                'InternetGatewayDevice.X_CT-COM_UserInfo.UserId'
             ];
             if ($mfg === 'cdt') {
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID';
@@ -407,11 +421,18 @@ function handleEmptyPost($koneksi, $messageId) {
                 'InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower',
                 'InternetGatewayDevice.WANDevice.1.X_CT-COM_EponInterfaceConfig.RXPower',
                 'InternetGatewayDevice.WANDevice.1.X_CT-COM_EponInterfaceConfig.TXPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_GponInterfaceConfig.RXPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_GponInterfaceConfig.TXPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_EponInterfaceConfig.RXPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_EponInterfaceConfig.TXPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_Dslh.OpticalDiagnostics.RxPower',
+                'InternetGatewayDevice.WANDevice.1.X_ZTE_Dslh.OpticalDiagnostics.TxPower',
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANONUConnection.OpticalSignalLevel',
                 'InternetGatewayDevice.X_GPON.Diagnostics.OpticalInformation.RxOpticalPower',
                 'InternetGatewayDevice.X_HW_OpticalDiagnostics.RxPower',
                 'InternetGatewayDevice.X_ZTE_Dslh.OpticalDiagnostics.RxPower',
-                'InternetGatewayDevice.Hosts.'
+                'InternetGatewayDevice.Hosts.',
+                'InternetGatewayDevice.LANDevice.1.Hosts.'
             ]);
         }
         
@@ -550,6 +571,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
         $pppoeStatus = null;
         $wifiSsid24 = null;
         $wifiSsid5 = null;
+        $itmsUsername = null;
         
         $pppoeConnections = [];
         $hostsList = [];
@@ -565,6 +587,11 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             
             // Log parsed parameter for debugging
             file_put_contents(dirname(__FILE__) . '/../scratch/acs_debug.log', "Parsed Parameter: " . $name . " = " . $value . "\n", FILE_APPEND);
+            
+            // Extract ITMS/RMS Username
+            if (strpos($name, 'X_CT-COM_UserInfo.UserName') !== false || strpos($name, 'X_CT-COM_UserInfo.UserId') !== false) {
+                $itmsUsername = $value;
+            }
             
             // Extract Optical Power parameters (RxPower and TxPower)
             $isTx = (strpos($name, 'TxPower') !== false || strpos($name, 'TxOpticalPower') !== false || strpos($name, 'OpticalInfo.TxPower') !== false || strpos($name, 'OpticalDiagnostics.TxPower') !== false || strpos($name, 'TXPower') !== false);
@@ -608,13 +635,17 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             }
 
             // Extract Hosts details
-            if (preg_match('/(Device|InternetGatewayDevice)\.Hosts\.Host\.(\d+)\.(HostName|IPAddress|MACAddress|Active|InterfaceType)/i', $name, $matches)) {
+            if (preg_match('/(Device|InternetGatewayDevice)(?:\.LANDevice\.\d+)?\.Hosts\.Host\.(\d+)\.(HostName|IPAddress|MACAddress|PhysAddress|Active|InterfaceType)/i', $name, $matches)) {
                 $hostIdx = intval($matches[2]);
                 $field = strtolower($matches[3]);
                 if (!isset($hostsList[$hostIdx])) {
                     $hostsList[$hostIdx] = [];
                 }
-                $hostsList[$hostIdx][$field] = $value;
+                if ($field === 'physaddress') {
+                    $hostsList[$hostIdx]['macaddress'] = $value;
+                } else {
+                    $hostsList[$hostIdx][$field] = $value;
+                }
             }
         }
         
@@ -627,6 +658,14 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             }
         }
         
+        // Fallback to ITMS/RMS Username if PPPoE Username is empty
+        if (empty($pppoeUsername) && !empty($itmsUsername)) {
+            $pppoeUsername = $itmsUsername;
+            if (empty($pppoeStatus)) {
+                $pppoeStatus = 'Connected';
+            }
+        }
+
         // Fallback if no username was retrieved, but a connection is online
         if ($pppoeUsername === null) {
             foreach ($pppoeConnections as $conn) {
