@@ -38,6 +38,11 @@ class CheckLicense
             return $next($request);
         }
 
+        // Mencegah error jika migrasi belum dijalankan di server live
+        if (!property_exists($profile, 'license_key')) {
+            return $next($request);
+        }
+
         $licenseKey = $profile->license_key;
         $status = $profile->license_status;
         $expiresAt = $profile->license_expires_at ? Carbon::parse($profile->license_expires_at) : null;
