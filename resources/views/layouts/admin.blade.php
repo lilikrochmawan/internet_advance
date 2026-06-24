@@ -867,13 +867,24 @@
 
     <!-- Sidebar Menu -->
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-brand" style="gap: 10px;">
+        <div class="sidebar-brand" style="gap: 10px; display: flex; align-items: center;">
             @if(!empty($profile->foto) && file_exists(public_path('images/' . $profile->foto)))
-                <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo" style="width: 30px; height: 30px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.15); padding: 2px;">
+                <img src="{{ asset('images/' . $profile->foto) }}" alt="Logo" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.15); padding: 2px; flex-shrink: 0;">
             @else
-                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-wifi" style="flex-shrink: 0;"></i>
             @endif
-            <span>{{ $profile->nama_sekolah ?? 'INDOTEL' }}</span>
+            <div style="display: flex; flex-direction: column; min-width: 0;">
+                <span style="font-size: 1.1rem; line-height: 1.2; font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: 0.5px; word-break: break-word;">{{ $profile->nama_sekolah ?? 'INDOTEL' }}</span>
+                @if(!empty($profile->license_key))
+                    <span class="badge-license" style="font-size: 0.65rem; background: rgba(255,255,255,0.2); color: #ffffff; padding: 2px 6px; border-radius: 4px; display: inline-block; width: max-content; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; border: 1px solid rgba(255,255,255,0.15); font-family: 'Outfit', sans-serif;">
+                        (License: {{ $profile->license_plan_name ?? 'Lite' }})
+                    </span>
+                @else
+                    <span class="badge-license" style="font-size: 0.65rem; background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 2px 6px; border-radius: 4px; display: inline-block; width: max-content; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1; font-family: 'Outfit', sans-serif;">
+                        No License
+                    </span>
+                @endif
+            </div>
         </div>
         
         <div class="sidebar-user">
