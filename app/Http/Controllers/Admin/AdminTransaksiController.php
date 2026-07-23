@@ -214,13 +214,21 @@ class AdminTransaksiController extends Controller
                 'jatuh_tempo' => $tgl_jatuh_tempo
             ]);
 
-            // Otomatis unblock Mikrotik jika tagihan terbaru lunas
-            $latestBill = DB::table('tb_tagihan')
+            // Otomatis unblock Mikrotik jika tagihan bulan berjalan sudah lunas, atau belum jatuh tempo
+            $currentPeriod = date('mY');
+            $currentBill = DB::table('tb_tagihan')
                 ->where('id_pelanggan', $pelanggan->id_pelanggan)
-                ->orderBy('id_tagihan', 'desc')
+                ->where('bulan_tahun', $currentPeriod)
                 ->first();
 
-            if ($latestBill && $latestBill->status_bayar == 1) {
+            $unblock = true;
+            if ($currentBill && $currentBill->status_bayar != 1) {
+                if (strtotime($currentBill->jatuh_tempo) < time()) {
+                    $unblock = false;
+                }
+            }
+
+            if ($unblock) {
                 try {
                     $user = User::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
                     $checkUser = DB::table('tbl_penggunamikrotik')->first();
