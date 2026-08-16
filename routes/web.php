@@ -142,6 +142,7 @@ Route::prefix('administrator')->group(function () {
         Route::post('/pengaturan/jatuh-tempo', [AdminPengaturanController::class, 'updateJatuhTempo'])->name('admin.pengaturan.jatuh_tempo');
         Route::post('/pengaturan/biaya-admin', [AdminPengaturanController::class, 'updateBiayaAdmin'])->name('admin.pengaturan.biaya_admin');
         Route::post('/pengaturan/license', [AdminPengaturanController::class, 'updateLicense'])->name('admin.pengaturan.license');
+        Route::post('/pengaturan/tax-settings', [AdminPengaturanController::class, 'updateTaxSettings'])->name('admin.pengaturan.tax_settings');
         Route::get('/pengaturan/backup', [AdminPengaturanController::class, 'backupDb'])->name('admin.pengaturan.backup');
 
         // Pengaturan Client (Branch & Staff Access)

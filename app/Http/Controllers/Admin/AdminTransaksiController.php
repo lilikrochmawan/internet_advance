@@ -676,12 +676,10 @@ class AdminTransaksiController extends Controller
         $tahun = $request->get('tahun', date('Y'));
         $bulantahun = $bulan . $tahun;
 
-        // Cek apakah PPN aktif
-        $ppn_aktif = false;
-        $paketSettings = DB::table('tbl_paketmikrotik')->first();
-        if ($paketSettings && isset($paketSettings->ppn) && $paketSettings->ppn === 'aktif') {
-            $ppn_aktif = true;
-        }
+        // Cek apakah PPN aktif dan dibebankan ke pelanggan
+        $settings = DB::table('tb_profile')->first();
+        $ppn_aktif = (($settings->tax_ppn_status ?? 'tidak') === 'aktif') && (($settings->tax_ppn_charged ?? 'ya') === 'ya');
+        $global_ppn_rate = (double)($settings->tax_ppn_rate ?? 11.00) / 100;
 
         // Cari pelanggan yang belum memiliki tagihan pada bulan & tahun tersebut
         $pelanggan = Pelanggan::with('paketDetail')
@@ -694,7 +692,7 @@ class AdminTransaksiController extends Controller
             })
             ->get();
 
-        return view('admin.transaksi.generate', compact('pelanggan', 'bulan', 'tahun', 'bulantahun', 'ppn_aktif'));
+        return view('admin.transaksi.generate', compact('pelanggan', 'bulan', 'tahun', 'bulantahun', 'ppn_aktif', 'global_ppn_rate'));
     }
 
     public function generate(Request $request)

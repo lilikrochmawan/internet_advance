@@ -512,16 +512,20 @@ class AdminPelangganController extends Controller
                         ->first();
 
                     if ($unpaidTagihan) {
-                        // Calculate new bill amount (taking into account the PPN settings)
-                        $ppn_aktif = false;
-                        $paketSettings = DB::table('tbl_paketmikrotik')->first();
-                        if ($paketSettings && isset($paketSettings->ppn) && $paketSettings->ppn === 'aktif') {
-                            $ppn_aktif = true;
-                        }
+                        // Calculate new bill amount (taking into account the PPN settings from tb_profile)
+                        $settings = DB::table('tb_profile')->first();
+                        $ppn_aktif = (($settings->tax_ppn_status ?? 'tidak') === 'aktif') && (($settings->tax_ppn_charged ?? 'ya') === 'ya');
+                        $global_ppn_rate = (double)($settings->tax_ppn_rate ?? 11.00) / 100;
 
                         $newPaket = Paket::find($paketId);
                         $harga_paket = $newPaket ? $newPaket->harga : 0;
                         $ppn_rate = $newPaket ? $newPaket->ppn : 0;
+
+                        if ($ppn_rate <= 0) {
+                            $ppn_rate = $global_ppn_rate;
+                        } else if ($ppn_rate > 1) {
+                            $ppn_rate = $ppn_rate / 100;
+                        }
 
                         if ($ppn_aktif) {
                             $newJmlBayar = $harga_paket + ($harga_paket * $ppn_rate);
