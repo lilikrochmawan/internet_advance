@@ -11,6 +11,23 @@ ini_set('display_errors', 0);
 // Include database connection
 require_once dirname(__FILE__) . '/../administrator/include/koneksi.php';
 
+// Self-healing database schema verification
+ensureDatabaseSchema($koneksi);
+
+function ensureDatabaseSchema($koneksi) {
+    // Check if wifi_ssid_5_index exists
+    $checkIndex = $koneksi->query("SHOW COLUMNS FROM tb_cpe LIKE 'wifi_ssid_5_index'");
+    if ($checkIndex && $checkIndex->num_rows === 0) {
+        $koneksi->query("ALTER TABLE tb_cpe ADD COLUMN wifi_ssid_5_index INT NULL DEFAULT NULL AFTER wifi_ssid_5");
+    }
+
+    // Check if pppoe_conn_key exists
+    $checkKey = $koneksi->query("SHOW COLUMNS FROM tb_cpe LIKE 'pppoe_conn_key'");
+    if ($checkKey && $checkKey->num_rows === 0) {
+        $koneksi->query("ALTER TABLE tb_cpe ADD COLUMN pppoe_conn_key VARCHAR(255) NULL DEFAULT NULL AFTER pppoe_username");
+    }
+}
+
 session_start();
 
 // Get the raw POST content
@@ -74,7 +91,7 @@ switch ($methodName) {
         break;
 
     case 'Fault':
-        handleFaultResponse($koneksi);
+        handleFaultResponse($koneksi, $messageId);
         break;
 
     default:
@@ -416,12 +433,22 @@ function handleInform($koneksi, $xpath, $messageId) {
  * Handle CPE indicating it's ready for commands (Empty SOAP Post)
  */
 function handleEmptyPost($koneksi, $messageId) {
-    if (empty($_SESSION['serial_number'])) {
+    $serialNumber = $_SESSION['serial_number'] ?? '';
+    if (empty($serialNumber)) {
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $q = $koneksi->query("SELECT serial_number FROM tb_cpe WHERE ip_address = '" . $koneksi->real_escape_string($ip) . "' ORDER BY last_inform DESC LIMIT 1");
+        if ($q && $q->num_rows > 0) {
+            $row = $q->fetch_assoc();
+            $serialNumber = $row['serial_number'];
+            $_SESSION['serial_number'] = $serialNumber;
+        }
+    }
+
+    if (empty($serialNumber)) {
         sendEmptyResponse();
         return;
     }
 
-    $serialNumber = $_SESSION['serial_number'];
     $escapedSerial = $koneksi->real_escape_string($serialNumber);
 
     // Look for pending commands in queue
@@ -433,7 +460,17 @@ function handleEmptyPost($koneksi, $messageId) {
     if ((!$query || $query->num_rows === 0) && empty($_SESSION['auto_queried'])) {
         $_SESSION['auto_queried'] = true;
         
-        $cwmpModel = $_SESSION['cwmp_model'] ?? 'tr098';
+        $cwmpModel = $_SESSION['cwmp_model'] ?? '';
+        if (empty($cwmpModel)) {
+            $modelQuery = $koneksi->query("SELECT cwmp_model FROM tb_cpe WHERE serial_number = '$escapedSerial'");
+            if ($modelQuery && $modelQuery->num_rows > 0) {
+                $modelRow = $modelQuery->fetch_assoc();
+                $cwmpModel = $modelRow['cwmp_model'] ?: 'tr098';
+            } else {
+                $cwmpModel = 'tr098';
+            }
+            $_SESSION['cwmp_model'] = $cwmpModel;
+        }
         
         // Fetch manufacturer
         $mfg = '';
@@ -652,25 +689,40 @@ function handleEmptyPost($koneksi, $messageId) {
  * Handle responses to commands sent by the ACS
  */
 function handleResponse($koneksi, $methodName, $messageId, $xpath) {
-    if (!empty($_SESSION['active_command_id'])) {
-        $idCommand = (int) $_SESSION['active_command_id'];
-        unset($_SESSION['active_command_id']);
+    $idCommand = 0;
+    if (strpos($messageId, 'cmd_') === 0) {
+        $idCommand = (int) substr($messageId, 4);
+    }
 
+    $serialNumber = '';
+    if ($idCommand > 0) {
         // Update command status to 'success'
         $koneksi->query("UPDATE tb_acs_queue SET status = 'success', updated_at = NOW() WHERE id_command = $idCommand");
+
+        // Lookup serial number from queue
+        $q = $koneksi->query("SELECT serial_number FROM tb_acs_queue WHERE id_command = $idCommand");
+        if ($q && $q->num_rows > 0) {
+            $row = $q->fetch_assoc();
+            $serialNumber = $row['serial_number'];
+        }
+    }
+
+    if (empty($serialNumber) && !empty($_SESSION['serial_number'])) {
+        $serialNumber = $_SESSION['serial_number'];
     }
 
     // Parse parameters returned by GetParameterValuesResponse
-    if ($methodName === 'GetParameterValuesResponse' && !empty($_SESSION['serial_number'])) {
-        $serialNumber = $_SESSION['serial_number'];
+    if ($methodName === 'GetParameterValuesResponse' && !empty($serialNumber)) {
         $escapedSerial = $koneksi->real_escape_string($serialNumber);
 
-        // Fetch manufacturer
+        // Fetch manufacturer and wifi_ssid_5_index
         $mfg = '';
-        $mfgQuery = $koneksi->query("SELECT manufacturer FROM tb_cpe WHERE serial_number = '$escapedSerial'");
+        $dbSsid5Index = null;
+        $mfgQuery = $koneksi->query("SELECT manufacturer, wifi_ssid_5_index FROM tb_cpe WHERE serial_number = '$escapedSerial'");
         if ($mfgQuery && $mfgQuery->num_rows > 0) {
             $mfgRow = $mfgQuery->fetch_assoc();
             $mfg = strtolower(trim($mfgRow['manufacturer']));
+            $dbSsid5Index = $mfgRow['wifi_ssid_5_index'] !== null ? (int)$mfgRow['wifi_ssid_5_index'] : null;
         }
         $isCData = ($mfg === 'cdt' || $mfg === 'cdata' || $mfg === 'c-data');
         $isZte = (strpos($mfg, 'zte') !== false || $mfg === 'pteg');
@@ -775,7 +827,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                     $wifiChannel24 = $value;
                 } else {
                     if ($isCData) {
-                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 5;
+                        $active5gIndex = $dbSsid5Index ?? 5;
                         if ($index === $active5gIndex || ($index === 6 && empty($wifiChannel5))) {
                             $wifiChannel5 = $value;
                         } elseif ($index === 5 && empty($wifiChannel5)) {
@@ -784,7 +836,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                             $wifiChannel5 = $value;
                         }
                     } else {
-                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 5;
+                        $active5gIndex = $dbSsid5Index ?? 5;
                         if ($index === $active5gIndex || ($index === 5 && empty($wifiChannel5))) {
                             $wifiChannel5 = $value;
                         } elseif ($index === 6 && empty($wifiChannel5)) {
@@ -914,14 +966,13 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
     handleEmptyPost($koneksi, $messageId);
 }
 
-/**
- * Handle Fault response when a command fails
- */
-function handleFaultResponse($koneksi) {
-    if (!empty($_SESSION['active_command_id'])) {
-        $idCommand = (int) $_SESSION['active_command_id'];
-        unset($_SESSION['active_command_id']);
-        
+function handleFaultResponse($koneksi, $messageId) {
+    $idCommand = 0;
+    if (strpos($messageId, 'cmd_') === 0) {
+        $idCommand = (int) substr($messageId, 4);
+    }
+    
+    if ($idCommand > 0) {
         // Fetch failed command to inspect command_data
         $resCmd = $koneksi->query("SELECT * FROM tb_acs_queue WHERE id_command = $idCommand");
         if ($resCmd && $resCmd->num_rows > 0) {
