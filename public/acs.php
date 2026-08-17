@@ -237,11 +237,18 @@ function handleInform($koneksi, $xpath, $messageId) {
             } else {
                 $mfgLower = strtolower($manufacturer);
                 $isCData = ($mfgLower === 'cdt' || $mfgLower === 'cdata' || $mfgLower === 'c-data');
-                if ($isCData) {
-                    if ($index === 6) {
+                $isZte = (strpos($mfgLower, 'zte') !== false || $mfgLower === 'pteg');
+                
+                if ($isZte) {
+                    if ($index === 5) {
                         $wifiSsid5 = $value;
                         $_SESSION['wifi_ssid_5_index'] = $index;
-                    } elseif ($index === 5 && empty($wifiSsid5)) {
+                    }
+                } elseif ($isCData) {
+                    if ($index === 5) {
+                        $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    } elseif ($index === 6 && empty($wifiSsid5)) {
                         $wifiSsid5 = $value;
                         $_SESSION['wifi_ssid_5_index'] = $index;
                     } elseif ($index === 2 && empty($wifiSsid5)) {
@@ -249,10 +256,13 @@ function handleInform($koneksi, $xpath, $messageId) {
                         $_SESSION['wifi_ssid_5_index'] = $index;
                     }
                 } else {
-                    if ($index === 6) {
+                    if ($index === 5) {
                         $wifiSsid5 = $value;
                         $_SESSION['wifi_ssid_5_index'] = $index;
-                    } elseif (in_array($index, [5, 9]) && empty($wifiSsid5)) {
+                    } elseif ($index === 6 && empty($wifiSsid5)) {
+                        $wifiSsid5 = $value;
+                        $_SESSION['wifi_ssid_5_index'] = $index;
+                    } elseif ($index === 9 && empty($wifiSsid5)) {
                         $wifiSsid5 = $value;
                         $_SESSION['wifi_ssid_5_index'] = $index;
                     }
@@ -318,7 +328,7 @@ function handleInform($koneksi, $xpath, $messageId) {
         
         if ($rxPower !== null) $updateFields[] = "rx_power = '" . $koneksi->real_escape_string($rxPower) . "'";
         if ($txPower !== null) $updateFields[] = "tx_power = '" . $koneksi->real_escape_string($txPower) . "'";
-        if ($pppoeUsername !== null) $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
+        if ($pppoeUsername !== null && strtolower($pppoeUsername) !== 'default') $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
         if ($pppoeStatus !== null) $updateFields[] = "pppoe_status = '" . $koneksi->real_escape_string($pppoeStatus) . "'";
         if ($wifiSsid24 !== null) $updateFields[] = "wifi_ssid_24 = '" . $koneksi->real_escape_string($wifiSsid24) . "'";
         if ($wifiSsid5 !== null) {
@@ -663,6 +673,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             $mfg = strtolower(trim($mfgRow['manufacturer']));
         }
         $isCData = ($mfg === 'cdt' || $mfg === 'cdata' || $mfg === 'c-data');
+        $isZte = (strpos($mfg, 'zte') !== false || $mfg === 'pteg');
         
         $rxPower = null;
         $txPower = null;
@@ -723,7 +734,12 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                 if ($index === 1) {
                     $wifiSsid24 = $value;
                 } else {
-                    if ($isCData) {
+                    if ($isZte) {
+                        if ($index === 5) {
+                            $wifiSsid5 = $value;
+                            $_SESSION['wifi_ssid_5_index'] = $index;
+                        }
+                    } elseif ($isCData) {
                         // CData dual-band uses index 6 for 5GHz, older models may use index 5 or 2.
                         // We prioritize index 6, then index 5, then index 2.
                         if ($index === 6) {
@@ -738,13 +754,13 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                         }
                     } else {
                         // For non-CData, prefer index 6, then 5, then 9
-                        if ($index === 6) {
+                        if ($index === 5) {
                             $wifiSsid5 = $value;
                             $_SESSION['wifi_ssid_5_index'] = $index;
-                        } elseif ($index === 5 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                        } elseif ($index === 6 && empty($wifiSsid5)) {
                             $wifiSsid5 = $value;
                             $_SESSION['wifi_ssid_5_index'] = $index;
-                        } elseif ($index === 9 && (empty($wifiSsid5) || strpos($wifiSsid5, 'HGW') === 0)) {
+                        } elseif ($index === 9 && empty($wifiSsid5)) {
                             $wifiSsid5 = $value;
                             $_SESSION['wifi_ssid_5_index'] = $index;
                         }
@@ -759,7 +775,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
                     $wifiChannel24 = $value;
                 } else {
                     if ($isCData) {
-                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 6;
+                        $active5gIndex = isset($_SESSION['wifi_ssid_5_index']) ? (int)$_SESSION['wifi_ssid_5_index'] : 5;
                         if ($index === $active5gIndex || ($index === 6 && empty($wifiChannel5))) {
                             $wifiChannel5 = $value;
                         } elseif ($index === 5 && empty($wifiChannel5)) {
@@ -798,25 +814,34 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
         // Find the active PPPoE connection with a username (prioritizing non-default usernames)
         $fallbackUsername = null;
         $fallbackStatus = null;
-        foreach ($pppoeConnections as $conn) {
+        $activeConnKey = null;
+        $fallbackConnKey = null;
+        foreach ($pppoeConnections as $connKey => $conn) {
             if (!empty($conn['username'])) {
                 if (strtolower($conn['username']) !== 'default') {
                     $pppoeUsername = $conn['username'];
                     $pppoeStatus = $conn['status'];
+                    $activeConnKey = $connKey;
                     break;
                 } else {
                     $fallbackUsername = $conn['username'];
                     $fallbackStatus = $conn['status'];
+                    $fallbackConnKey = $connKey;
                 }
             }
         }
-        if (empty($pppoeUsername) && !empty($fallbackUsername)) {
+        
+        $finalConnKey = null;
+        if (!empty($activeConnKey)) {
+            $finalConnKey = $activeConnKey;
+        } elseif (empty($pppoeUsername) && !empty($fallbackUsername)) {
             $pppoeUsername = $fallbackUsername;
             $pppoeStatus = $fallbackStatus;
+            $finalConnKey = $fallbackConnKey;
         }
         
-        // Fallback to ITMS/RMS Username if PPPoE Username is empty
-        if (empty($pppoeUsername) && !empty($itmsUsername)) {
+        // Fallback to ITMS/RMS Username if PPPoE Username is empty (and it's not 'default')
+        if (empty($pppoeUsername) && !empty($itmsUsername) && strtolower($itmsUsername) !== 'default') {
             $pppoeUsername = $itmsUsername;
             if (empty($pppoeStatus)) {
                 $pppoeStatus = 'Connected';
@@ -836,8 +861,9 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
         $updateFields = [];
         if ($rxPower !== null) $updateFields[] = "rx_power = '" . $koneksi->real_escape_string($rxPower) . "'";
         if ($txPower !== null) $updateFields[] = "tx_power = '" . $koneksi->real_escape_string($txPower) . "'";
-        if ($pppoeUsername !== null) $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
+        if ($pppoeUsername !== null && strtolower($pppoeUsername) !== 'default') $updateFields[] = "pppoe_username = '" . $koneksi->real_escape_string($pppoeUsername) . "'";
         if ($pppoeStatus !== null) $updateFields[] = "pppoe_status = '" . $koneksi->real_escape_string($pppoeStatus) . "'";
+        if ($finalConnKey !== null) $updateFields[] = "pppoe_conn_key = '" . $koneksi->real_escape_string($finalConnKey) . "'";
         if ($wifiSsid24 !== null) $updateFields[] = "wifi_ssid_24 = '" . $koneksi->real_escape_string($wifiSsid24) . "'";
         if ($wifiSsid5 !== null) {
             $updateFields[] = "wifi_ssid_5 = '" . $koneksi->real_escape_string($wifiSsid5) . "'";
