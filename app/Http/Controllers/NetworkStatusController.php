@@ -84,8 +84,11 @@ class NetworkStatusController extends Controller
         // Detect if it is TR-181 or TR-098 based on CPE model
         $hasTr181InQueue = ($cpe->cwmp_model === 'tr181');
 
-        $mfg = strtolower(trim($cpe->manufacturer));
-        $index5g = $mfg === 'cdt' ? 2 : 5;
+        if (!empty($cpe->wifi_ssid_5_index)) {
+            $index5g = (int) $cpe->wifi_ssid_5_index;
+        } else {
+            $index5g = 5;
+        }
 
         $params = [];
         if ($hasTr181InQueue) {

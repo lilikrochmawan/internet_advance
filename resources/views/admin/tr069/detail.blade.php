@@ -883,6 +883,16 @@
                     <i class="fa-solid fa-power-off"></i> Reboot ONT (Queue)
                 </button>
             </form>
+
+            @if(!empty($cpe->id_pelanggan))
+            <form method="POST" action="{{ route('admin.tr069.autoprovision') }}" onsubmit="return confirm('Apakah Anda yakin ingin melakukan setup otomatis WiFi & PPPoE untuk modem ini?')">
+                @csrf
+                <input type="hidden" name="id_cpe" value="{{ $cpe->id_cpe }}">
+                <button type="submit" class="tr-btn tr-btn-success" style="background-color: var(--success-color, #10b981); border-color: var(--success-color, #10b981); color: white;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Setup Otomatis (WiFi & PPPoE)
+                </button>
+            </form>
+            @endif
         </div>
 
         <div class="tr-grid">
