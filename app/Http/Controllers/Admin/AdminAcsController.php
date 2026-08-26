@@ -91,8 +91,28 @@ class AdminAcsController extends Controller
         return redirect()->route('admin.tr069.index')->with('success', 'Berhasil melepas hubungan pelanggan dari perangkat ini.');
     }
 
+    private function ensureSchemaColumns()
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('tb_cpe', 'wifi_password')) {
+                \Illuminate\Support\Facades\Schema::table('tb_cpe', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('wifi_password')->nullable()->after('wifi_ssid_24');
+                });
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('tb_cpe', 'wifi_password_5')) {
+                \Illuminate\Support\Facades\Schema::table('tb_cpe', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('wifi_password_5')->nullable()->after('wifi_ssid_5');
+                });
+            }
+        } catch (\Exception $e) {
+            // Silence exception
+        }
+    }
+
     public function detail($id)
     {
+        $this->ensureSchemaColumns();
+
         $cpe = DB::table('tb_cpe')
             ->leftJoin('tb_pelanggan', 'tb_cpe.id_pelanggan', '=', 'tb_pelanggan.id_pelanggan')
             ->select('tb_cpe.*', 'tb_pelanggan.nama_pelanggan', 'tb_pelanggan.kode_pelanggan', 'tb_pelanggan.alamat', 'tb_pelanggan.odp')
@@ -191,22 +211,24 @@ class AdminAcsController extends Controller
 
         if ($paramType === 'tr098') {
             $ssid = $request->tr098_ssid;
+            $ssid5 = $request->tr098_ssid_5;
             $pass = $request->tr098_password;
+            $pass5 = $request->tr098_password_5;
             $pppUser = $request->tr098_pppoe_username;
             $pppPass = $request->tr098_pppoe_password;
             $adminPass = $request->tr098_admin_password;
 
             if ($ssid !== null && $ssid !== '') {
                 $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID'] = $ssid;
-                if (!empty($cpe->wifi_ssid_5)) {
-                    $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.' . $index5g . '.SSID'] = $ssid;
-                }
+            }
+            if ($ssid5 !== null && $ssid5 !== '') {
+                $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.' . $index5g . '.SSID'] = $ssid5;
             }
             if ($pass !== null && $pass !== '') {
                 $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey'] = $pass;
-                if (!empty($cpe->wifi_ssid_5)) {
-                    $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.' . $index5g . '.PreSharedKey.1.PreSharedKey'] = $pass;
-                }
+            }
+            if ($pass5 !== null && $pass5 !== '') {
+                $params['InternetGatewayDevice.LANDevice.1.WLANConfiguration.' . $index5g . '.PreSharedKey.1.PreSharedKey'] = $pass5;
             }
             if ($pppUser !== null && $pppUser !== '') {
                 $params['InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username'] = $pppUser;
@@ -219,22 +241,24 @@ class AdminAcsController extends Controller
             }
         } elseif ($paramType === 'tr181') {
             $ssid = $request->tr181_ssid;
+            $ssid5 = $request->tr181_ssid_5;
             $pass = $request->tr181_password;
+            $pass5 = $request->tr181_password_5;
             $pppUser = $request->tr181_pppoe_username;
             $pppPass = $request->tr181_pppoe_password;
             $adminPass = $request->tr181_admin_password;
 
             if ($ssid !== null && $ssid !== '') {
                 $params['Device.WiFi.SSID.1.SSID'] = $ssid;
-                if (!empty($cpe->wifi_ssid_5)) {
-                    $params['Device.WiFi.SSID.' . $index5g . '.SSID'] = $ssid;
-                }
+            }
+            if ($ssid5 !== null && $ssid5 !== '') {
+                $params['Device.WiFi.SSID.' . $index5g . '.SSID'] = $ssid5;
             }
             if ($pass !== null && $pass !== '') {
                 $params['Device.WiFi.AccessPoint.1.Security.KeyPassphrase'] = $pass;
-                if (!empty($cpe->wifi_ssid_5)) {
-                    $params['Device.WiFi.AccessPoint.' . $index5g . '.Security.KeyPassphrase'] = $pass;
-                }
+            }
+            if ($pass5 !== null && $pass5 !== '') {
+                $params['Device.WiFi.AccessPoint.' . $index5g . '.Security.KeyPassphrase'] = $pass5;
             }
             if ($pppUser !== null && $pppUser !== '') {
                 $params['Device.PPP.Interface.1.Username'] = $pppUser;

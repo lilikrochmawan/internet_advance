@@ -251,6 +251,12 @@ Route::prefix('administrator')->group(function () {
         // Log Aktivitas
         Route::get('/logs', [AdminLogController::class, 'index'])->name('admin.logs.index');
         
+        // Smart OLT Management
+        Route::resource('olt', \App\Http\Controllers\Admin\AdminOltController::class);
+        Route::get('olt/{id}/autofind', [\App\Http\Controllers\Admin\AdminOltController::class, 'autofind'])->name('admin.olt.autofind');
+        Route::post('olt/{id}/register', [\App\Http\Controllers\Admin\AdminOltController::class, 'register'])->name('admin.olt.register');
+        Route::get('olt/{id}/monitoring', [\App\Http\Controllers\Admin\AdminOltController::class, 'monitoring'])->name('admin.olt.monitoring');
+        
         // Debug Log Route (Temporary)
         Route::get('/view-laravel-log', function() {
             $logPath = storage_path('logs/laravel.log');
