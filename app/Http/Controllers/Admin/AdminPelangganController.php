@@ -154,7 +154,7 @@ class AdminPelangganController extends Controller
 
     public function checkPhone(Request $request)
     {
-        $no_telp = $request->no_telp;
+        $no_telp = preg_replace('/[^0-9+]/', '', $request->no_telp);
         $pelanggan = Pelanggan::where('no_telp', $no_telp)->first();
         if ($pelanggan) {
             return response()->json([
@@ -192,12 +192,12 @@ class AdminPelangganController extends Controller
             }
         }
 
-        $username = htmlspecialchars(strip_tags($request->username));
-        $password = htmlspecialchars(strip_tags($request->password));
-        $nik = htmlspecialchars(strip_tags($request->nik ?? ''));
-        $nama = htmlspecialchars(strip_tags($request->nama));
-        $alamat = htmlspecialchars(strip_tags($request->alamat ?? ''));
-        $no_telp = htmlspecialchars(strip_tags($request->no_telp));
+        $username = strip_tags($request->username);
+        $password = strip_tags($request->password);
+        $nik = strip_tags($request->nik ?? '');
+        $nama = strip_tags($request->nama);
+        $alamat = strip_tags($request->alamat ?? '');
+        $no_telp = preg_replace('/[^0-9+]/', '', $request->no_telp);
         $paketId = $request->paket;
         $id_mikrotik = intval($request->id_mikrotik);
         $odpId = ($request->filled('odp') && $request->odp !== '' && $request->odp !== 'NULL') ? intval($request->odp) : null;
@@ -374,10 +374,10 @@ class AdminPelangganController extends Controller
         $id = $request->id_pelanggan;
         $pelanggan = Pelanggan::findOrFail($id);
 
-        $nik = htmlspecialchars(strip_tags($request->nik ?? ''));
-        $nama = htmlspecialchars(strip_tags($request->nama_pelanggan));
-        $alamat = htmlspecialchars(strip_tags($request->alamat ?? ''));
-        $no_telp = htmlspecialchars(strip_tags($request->no_telp));
+        $nik = strip_tags($request->nik ?? '');
+        $nama = strip_tags($request->nama_pelanggan);
+        $alamat = strip_tags($request->alamat ?? '');
+        $no_telp = preg_replace('/[^0-9+]/', '', $request->no_telp);
         $paketId = $request->paket;
         $id_mikrotik = intval($request->id_mikrotik);
         $odpId = ($request->filled('odp') && $request->odp !== '' && $request->odp !== 'NULL') ? intval($request->odp) : null;
@@ -567,7 +567,7 @@ class AdminPelangganController extends Controller
             'alamat' => $pelanggan->alamat,
             'nik' => $pelanggan->nik,
             'location' => $pelanggan->location,
-            'alasan_hapus' => htmlspecialchars(strip_tags($request->alasan_hapus)),
+            'alasan_hapus' => strip_tags($request->alasan_hapus),
             'deleted_by' => auth()->id(),
             'created_at' => now(),
         ]);

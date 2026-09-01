@@ -247,6 +247,7 @@ Route::prefix('administrator')->group(function () {
         // Topology & Client Map
         Route::get('/mapping', [AdminMapController::class, 'index'])->name('admin.mapping.index');
         Route::get('/mapping/coordinates', [AdminMapController::class, 'getCoordinates'])->name('admin.mapping.coordinates');
+        Route::post('/mapping/update-odp', [AdminMapController::class, 'updateClientOdp'])->name('admin.mapping.update_odp');
 
         // Log Aktivitas
         Route::get('/logs', [AdminLogController::class, 'index'])->name('admin.logs.index');

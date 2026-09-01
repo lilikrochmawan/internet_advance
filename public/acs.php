@@ -261,7 +261,7 @@ function handleInform($koneksi, $xpath, $messageId) {
         }
         
         // Extract WiFi PreSharedKey / Password (2.4GHz and 5GHz)
-        if (preg_match('/(WLANConfiguration|WiFi\.AccessPoint)\.(\d+)\.(PreSharedKey\.1\.PreSharedKey|Security\.KeyPassphrase|Security\.PreSharedKey)$/i', $name, $matches)) {
+        if (preg_match('/(WLANConfiguration|WiFi\.AccessPoint)\.(\d+)\.(PreSharedKey\.1\.PreSharedKey|Security\.KeyPassphrase|Security\.PreSharedKey|KeyPassphrase)$/i', $name, $matches)) {
             $index = intval($matches[2]);
             if ($index === 1) {
                 $wifiPassword = $value;
@@ -543,21 +543,27 @@ function handleEmptyPost($koneksi, $messageId) {
                 'Device.PPP.Interface.3.ConnectionStatus',
                 'Device.WiFi.SSID.1.SSID',
                 'Device.WiFi.AccessPoint.1.Security.KeyPassphrase',
+                'Device.WiFi.AccessPoint.1.Security.PreSharedKey',
                 'Device.X_CT-COM_UserInfo.UserName',
                 'Device.X_CT-COM_UserInfo.UserId'
             ];
             if ($isCData) {
                 $pathsToQuery[] = 'Device.WiFi.SSID.2.SSID';
                 $pathsToQuery[] = 'Device.WiFi.AccessPoint.2.Security.KeyPassphrase';
+                $pathsToQuery[] = 'Device.WiFi.AccessPoint.2.Security.PreSharedKey';
                 $pathsToQuery[] = 'Device.WiFi.SSID.5.SSID';
                 $pathsToQuery[] = 'Device.WiFi.AccessPoint.5.Security.KeyPassphrase';
+                $pathsToQuery[] = 'Device.WiFi.AccessPoint.5.Security.PreSharedKey';
                 $pathsToQuery[] = 'Device.WiFi.SSID.6.SSID';
                 $pathsToQuery[] = 'Device.WiFi.AccessPoint.6.Security.KeyPassphrase';
+                $pathsToQuery[] = 'Device.WiFi.AccessPoint.6.Security.PreSharedKey';
             } else {
                 $pathsToQuery[] = 'Device.WiFi.SSID.5.SSID';
                 $pathsToQuery[] = 'Device.WiFi.AccessPoint.5.Security.KeyPassphrase';
+                $pathsToQuery[] = 'Device.WiFi.AccessPoint.5.Security.PreSharedKey';
                 $pathsToQuery[] = 'Device.WiFi.SSID.6.SSID';
                 $pathsToQuery[] = 'Device.WiFi.AccessPoint.6.Security.KeyPassphrase';
+                $pathsToQuery[] = 'Device.WiFi.AccessPoint.6.Security.PreSharedKey';
             }
             $pathsToQuery[] = 'Device.WiFi.Radio.1.Channel';
             $pathsToQuery[] = 'Device.WiFi.Radio.2.Channel';
@@ -578,21 +584,27 @@ function handleEmptyPost($koneksi, $messageId) {
                 'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.ConnectionStatus',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
                 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey',
+                'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase',
                 'InternetGatewayDevice.X_CT-COM_UserInfo.UserName',
                 'InternetGatewayDevice.X_CT-COM_UserInfo.UserId'
             ];
             if ($isCData) {
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.PreSharedKey.1.PreSharedKey';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.KeyPassphrase';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.SSID';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.PreSharedKey.1.PreSharedKey';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.KeyPassphrase';
             } else {
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.SSID';
                 $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.PreSharedKey.1.PreSharedKey';
+                $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.KeyPassphrase';
             }
             $pathsToQuery[] = 'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel';
             if ($isCData) {
@@ -845,7 +857,7 @@ function handleResponse($koneksi, $methodName, $messageId, $xpath) {
             }
             
             // Extract WiFi PreSharedKey / Password
-            if (preg_match('/(WLANConfiguration|WiFi\.AccessPoint)\.(\d+)\.(PreSharedKey\.1\.PreSharedKey|Security\.KeyPassphrase|Security\.PreSharedKey)$/i', $name, $matches)) {
+            if (preg_match('/(WLANConfiguration|WiFi\.AccessPoint)\.(\d+)\.(PreSharedKey\.1\.PreSharedKey|Security\.KeyPassphrase|Security\.PreSharedKey|KeyPassphrase)$/i', $name, $matches)) {
                 $index = intval($matches[2]);
                 if ($index === 1) {
                     $wifiPassword = $value;
