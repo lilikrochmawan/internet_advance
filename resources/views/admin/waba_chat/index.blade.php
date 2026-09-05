@@ -61,12 +61,30 @@
         color: #9ca3af;
         font-weight: normal;
     }
+    .contact-msg-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+    }
     .contact-msg {
         font-size: 0.85rem;
         color: #6b7280;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
+    }
+    .unread-badge {
+        background-color: #25D366;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        min-width: 20px;
+        text-align: center;
+        margin-left: 8px;
     }
     
     /* Right Panel: Chat Room */
@@ -209,7 +227,12 @@
                         {{ $contact->nama ?? 'Tidak Dikenal' }}
                         <span class="contact-time">{{ \Carbon\Carbon::parse($contact->last_message_time)->format('H:i') }}</span>
                     </div>
-                    <div class="contact-msg">{{ $contact->latest_pesan }}</div>
+                    <div class="contact-msg-row">
+                        <div class="contact-msg">{{ $contact->latest_pesan }}</div>
+                        @if($contact->unread_count > 0)
+                            <div class="unread-badge" id="badge-{{ $contact->no_telp }}">{{ $contact->unread_count }}</div>
+                        @endif
+                    </div>
                 </div>
             @empty
                 <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 0.9rem;">
@@ -286,7 +309,13 @@
         document.getElementById('current_no_telp').value = no_telp;
         document.getElementById('chat-messages').innerHTML = '<div style="text-align:center; padding: 20px; color:#6b7280;">Memuat riwayat...</div>';
         
-        fetch(`{{ url('/admin/waba-chat/load') }}/${no_telp}`)
+        // Remove unread badge visually since we are reading it
+        const badge = document.getElementById('badge-' + no_telp);
+        if (badge) {
+            badge.remove();
+        }
+        
+        fetch(`{{ url('/administrator/waba-chat/load') }}/${no_telp}`)
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {

@@ -100,7 +100,10 @@ class BablastWebhookController extends Controller
         }
         
         $tagihanBelumBayar = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
-            ->where('status_bayar', 0)
+            ->where(function ($q) {
+                $q->whereNull('status_bayar')
+                  ->orWhereIn('status_bayar', [0, '0', 'belum', '']);
+            })
             ->orderBy('bulan_tahun', 'asc')
             ->get();
             

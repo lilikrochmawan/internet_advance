@@ -15,7 +15,12 @@ class AdminWabaChatController extends Controller
     {
         // Get unique contacts with their latest message
         $contacts = DB::table('tbl_waba_chat')
-            ->select('no_telp', 'nama', DB::raw('MAX(created_at) as last_message_time'))
+            ->select(
+                'no_telp', 
+                'nama', 
+                DB::raw('MAX(created_at) as last_message_time'),
+                DB::raw("SUM(CASE WHEN tipe = 'incoming' AND status = 'received' THEN 1 ELSE 0 END) as unread_count")
+            )
             ->groupBy('no_telp', 'nama')
             ->orderBy('last_message_time', 'desc')
             ->get();
@@ -26,7 +31,6 @@ class AdminWabaChatController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
             $contact->latest_pesan = $latestMsg ? $latestMsg->pesan : '';
-            $contact->unread = 0; // Future: count unread messages
         }
 
         return view('admin.waba_chat.index', compact('contacts'));
@@ -34,6 +38,12 @@ class AdminWabaChatController extends Controller
     
     public function loadMessages($no_telp)
     {
+        // Mark messages as read
+        WabaChat::where('no_telp', $no_telp)
+            ->where('tipe', 'incoming')
+            ->where('status', 'received')
+            ->update(['status' => 'read']);
+            
         $messages = WabaChat::where('no_telp', $no_telp)
             ->orderBy('created_at', 'asc') // chronological order
             ->get();
