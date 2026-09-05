@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    public function sendMessage(string $target, string $message): bool
+    public function sendMessage(string $target, string $message, ?string $mediaUrl = null): bool
     {
         $tokenInfo = WaToken::find(1);
 
@@ -31,13 +31,13 @@ class WhatsAppService
         $gateway = $tokenInfo->wa_gateway ?? 'fonnte';
 
         if ($gateway === 'bablast') {
-            return $this->sendViaBablast($target, $message, $tokenInfo->bablast_token);
+            return $this->sendViaBablast($target, $message, $tokenInfo->bablast_token, $mediaUrl);
         } else {
-            return $this->sendViaFonnte($target, $message, $tokenInfo->token);
+            return $this->sendViaFonnte($target, $message, $tokenInfo->token, $mediaUrl);
         }
     }
 
-    private function sendViaFonnte(string $target, string $message, ?string $token): bool
+    private function sendViaFonnte(string $target, string $message, ?string $token, ?string $mediaUrl = null): bool
     {
         if (!$token) {
             Log::warning('WA Fonnte: Token Fonnte belum dikonfigurasi.');
@@ -45,13 +45,19 @@ class WhatsAppService
         }
 
         try {
-            $response = Http::withHeaders([
-                'Authorization' => $token,
-            ])->asForm()->post('https://api.fonnte.com/send', [
+            $payload = [
                 'target' => $target,
                 'message' => $message,
                 'countryCode' => '62'
-            ]);
+            ];
+
+            if ($mediaUrl) {
+                $payload['url'] = $mediaUrl;
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => $token,
+            ])->asForm()->post('https://api.fonnte.com/send', $payload);
 
             $resData = $response->json();
             
@@ -68,7 +74,7 @@ class WhatsAppService
         }
     }
 
-    private function sendViaBablast(string $target, string $message, ?string $token): bool
+    private function sendViaBablast(string $target, string $message, ?string $token, ?string $mediaUrl = null): bool
     {
         if (!$token) {
             Log::warning('WA Bablast: Token Bablast belum dikonfigurasi.');
@@ -76,13 +82,21 @@ class WhatsAppService
         }
 
         try {
+            $payload = [
+                'phone' => $target,
+                'message' => $message,
+            ];
+            
+            if ($mediaUrl) {
+                // For Bablast WABA, media is usually sent with specific types, but we'll try sending it via media_url parameter
+                $payload['media_url'] = $mediaUrl;
+                $payload['type'] = 'image'; // assumption for Bablast
+            }
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
-            ])->post('https://api.bablast.id/waba/send', [
-                'phone' => $target,
-                'message' => $message,
-            ]);
+            ])->post('https://api.bablast.id/waba/send', $payload);
 
             $resData = $response->json();
 

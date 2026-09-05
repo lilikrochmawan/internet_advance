@@ -201,6 +201,12 @@ Route::prefix('administrator')->group(function () {
         Route::post('/custom-pesan/bukablokir', [AdminCustomPesanController::class, 'updateBukaBlokir'])->name('admin.custom_pesan.bukablokir');
         Route::post('/custom-pesan/reminder', [AdminCustomPesanController::class, 'updateReminder'])->name('admin.custom_pesan.reminder');
         Route::post('/custom-pesan/promo', [AdminCustomPesanController::class, 'updatePromo'])->name('admin.custom_pesan.promo');
+        
+        // Webhook Template
+        Route::get('/webhook-template', [App\Http\Controllers\Admin\AdminWebhookTemplateController::class, 'index'])->name('admin.webhook_template.index');
+        Route::post('/webhook-template/update', [App\Http\Controllers\Admin\AdminWebhookTemplateController::class, 'update'])->name('admin.webhook_template.update');
+        Route::post('/webhook-template/store', [App\Http\Controllers\Admin\AdminWebhookTemplateController::class, 'store'])->name('admin.webhook_template.store');
+        Route::delete('/webhook-template/{id}', [App\Http\Controllers\Admin\AdminWebhookTemplateController::class, 'destroy'])->name('admin.webhook_template.destroy');
 
         // Broadcast Notifikasi & ODP/ODC Maintenance
         Route::get('/broadcast', [AdminNotificationController::class, 'index'])->name('admin.broadcast.index');

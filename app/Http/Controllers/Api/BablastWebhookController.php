@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Pelanggan;
 use App\Models\Tagihan;
 use App\Models\WabaChat;
+use App\Models\WebhookAutoreply;
 use App\Services\WhatsAppService;
 
 class BablastWebhookController extends Controller
@@ -63,10 +64,34 @@ class BablastWebhookController extends Controller
         // Deteksi Kata Kunci
         $messageUpper = strtoupper(trim($messageText));
         
-        if (str_contains($messageUpper, 'CEK TAGIHAN') || str_contains($messageUpper, 'INFO TAGIHAN')) {
-            $this->autoReplyTagihan($from);
-        } elseif (str_contains($messageUpper, 'HALO') || str_contains($messageUpper, 'PING')) {
-            $this->autoReplyHalo($from);
+        $templates = WebhookAutoreply::where('status_aktif', true)->get();
+        $matchedTipe = null;
+        
+        foreach ($templates as $template) {
+            if (empty($template->keyword)) continue;
+            
+            $keywords = array_map('trim', explode(',', strtoupper($template->keyword)));
+            foreach ($keywords as $kw) {
+                if (empty($kw)) continue;
+                if (str_contains($messageUpper, $kw)) {
+                    $matchedTipe = $template->tipe;
+                    // For tagihan, regardless of lunas/tunggak, the keyword is matched to tagihan_lunas
+                    if ($matchedTipe === 'tagihan_lunas' || $matchedTipe === 'tagihan_tunggak') {
+                        $matchedTipe = 'tagihan';
+                    }
+                    break 2;
+                }
+            }
+        }
+        
+        if ($matchedTipe === 'halo') {
+            $this->autoReplyHalo($from, $pelanggan);
+        } elseif ($matchedTipe === 'tagihan') {
+            $this->autoReplyTagihan($from, $pelanggan);
+        } elseif ($matchedTipe === 'paket_internet') {
+            $this->autoReplyPaket($from, $pelanggan);
+        } elseif ($matchedTipe && str_starts_with($matchedTipe, 'custom_')) {
+            $this->autoReplyCustom($from, $pelanggan, $matchedTipe);
         }
         
         return response()->json(['status' => 'success']);
@@ -84,18 +109,10 @@ class BablastWebhookController extends Controller
         return response()->json(['status' => 'success']);
     }
     
-    private function autoReplyTagihan(string $from)
+    private function autoReplyTagihan(string $from, ?Pelanggan $pelanggan)
     {
-        // Ambil 8-10 digit terakhir untuk mencari kecocokan di database 
-        // Mengantisipasi format +62, 62, atau 0 di database
-        $shortPhone = substr($from, -9);
-        
-        $pelanggan = Pelanggan::where('no_telp', 'like', "%{$shortPhone}%")->first();
-        
-        $waService = app(WhatsAppService::class);
-        
         if (!$pelanggan) {
-            $waService->sendMessage($from, "Maaf, nomor Anda tidak terdaftar dalam sistem kami. Silakan hubungi admin untuk bantuan.");
+            $this->sendAndLogReply($from, "Maaf, nomor Anda tidak terdaftar dalam sistem kami. Silakan hubungi admin untuk bantuan.");
             return;
         }
         
@@ -108,34 +125,91 @@ class BablastWebhookController extends Controller
             ->get();
             
         if ($tagihanBelumBayar->isEmpty()) {
-            $pesan = "Halo *{$pelanggan->nama_pelanggan}*,\n\nTerima kasih, saat ini **tidak ada tagihan yang tertunggak** (Lunas). Terima kasih telah berlangganan!";
-            $waService->sendMessage($from, $pesan);
+            $template = WebhookAutoreply::where('tipe', 'tagihan_lunas')->first();
+            if ($template && $template->status_aktif) {
+                $pesan = str_replace('{nama}', $pelanggan->nama_pelanggan, $template->pesan);
+                $this->sendAndLogReply($from, $pesan, $pelanggan->nama_pelanggan);
+            }
             return;
         }
         
-        $pesan = "Halo *{$pelanggan->nama_pelanggan}*,\nBerikut adalah informasi tagihan Anda yang belum dibayar:\n\n";
-        
-        $totalTunggakan = 0;
-        foreach ($tagihanBelumBayar as $idx => $tgh) {
-            $bulanTahun = $tgh->bulan_tahun ?? '-';
-            $nominal = "Rp " . number_format($tgh->jml_bayar, 0, ',', '.');
-            $pesan .= ($idx + 1) . ". Bulan: {$bulanTahun} - Tagihan: {$nominal}\n";
-            $totalTunggakan += $tgh->jml_bayar;
+        $template = WebhookAutoreply::where('tipe', 'tagihan_tunggak')->first();
+        if ($template && $template->status_aktif) {
+            $listTagihan = "";
+            $totalTunggakan = 0;
+            
+            foreach ($tagihanBelumBayar as $idx => $tgh) {
+                $bulanTahun = $tgh->bulan_tahun ?? '-';
+                $nominal = "Rp " . number_format($tgh->jml_bayar, 0, ',', '.');
+                $listTagihan .= ($idx + 1) . ". Bulan: {$bulanTahun} - Tagihan: {$nominal}\n";
+                $totalTunggakan += $tgh->jml_bayar;
+            }
+            
+            $totalFormatted = "Rp " . number_format($totalTunggakan, 0, ',', '.');
+            
+            $pesan = $template->pesan;
+            $pesan = str_replace('{nama}', $pelanggan->nama_pelanggan, $pesan);
+            $pesan = str_replace('{list_tagihan}', $listTagihan, $pesan);
+            $pesan = str_replace('{total_tunggakan}', $totalFormatted, $pesan);
+            
+            sleep(1);
+            $this->sendAndLogReply($from, $pesan, $pelanggan->nama_pelanggan);
         }
-        
-        $totalFormatted = "Rp " . number_format($totalTunggakan, 0, ',', '.');
-        $pesan .= "\n*Total Tunggakan: {$totalFormatted}*\n\n";
-        $pesan .= "Silakan lakukan pembayaran agar layanan internet tetap berjalan lancar. Terima kasih.";
-        
-        // Jeda sebentar agar terlihat natural
-        sleep(1);
-        $waService->sendMessage($from, $pesan);
     }
     
-    private function autoReplyHalo(string $from)
+    private function autoReplyHalo(string $from, ?Pelanggan $pelanggan)
+    {
+        $template = WebhookAutoreply::where('tipe', 'halo')->first();
+        if ($template && $template->status_aktif) {
+            $nama = $pelanggan ? $pelanggan->nama_pelanggan : 'Pelanggan';
+            $pesan = str_replace('{nama}', $nama, $template->pesan);
+            $this->sendAndLogReply($from, $pesan, $nama);
+        }
+    }
+
+    private function autoReplyPaket(string $from, ?Pelanggan $pelanggan)
+    {
+        $template = WebhookAutoreply::where('tipe', 'paket_internet')->first();
+        if ($template && $template->status_aktif) {
+            $nama = $pelanggan ? $pelanggan->nama_pelanggan : 'Kak';
+            $pesan = str_replace('{nama}', $nama, $template->pesan);
+            
+            $mediaUrl = null;
+            if ($template->media_path) {
+                $mediaUrl = asset($template->media_path);
+            }
+            
+            $this->sendAndLogReply($from, $pesan, $nama, $mediaUrl);
+        }
+    }
+
+    private function autoReplyCustom(string $from, ?Pelanggan $pelanggan, string $tipe)
+    {
+        $template = WebhookAutoreply::where('tipe', $tipe)->first();
+        if ($template && $template->status_aktif) {
+            $nama = $pelanggan ? $pelanggan->nama_pelanggan : 'Kak';
+            $pesan = str_replace('{nama}', $nama, $template->pesan);
+            
+            $mediaUrl = null;
+            if ($template->media_path) {
+                $mediaUrl = asset($template->media_path);
+            }
+            
+            $this->sendAndLogReply($from, $pesan, $nama, $mediaUrl);
+        }
+    }
+
+    private function sendAndLogReply(string $no_telp, string $pesan, string $nama = 'Tidak Dikenal', ?string $mediaUrl = null)
     {
         $waService = app(WhatsAppService::class);
-        $pesan = "Halo! Ini adalah sistem layanan otomatis. \nKetik *CEK TAGIHAN* untuk mengecek informasi tagihan Anda.";
-        $waService->sendMessage($from, $pesan);
+        $waService->sendMessage($no_telp, $pesan, $mediaUrl);
+        
+        WabaChat::create([
+            'no_telp' => $no_telp,
+            'nama' => $nama,
+            'pesan' => $pesan,
+            'tipe' => 'outgoing',
+            'status' => 'sent',
+        ]);
     }
 }

@@ -1063,7 +1063,7 @@
 
             @if(Auth::user()->hasMenuAccess('custom_pesan'))
                 @php
-                    $isWhatsappActive = in_array($currRoute, ['admin.custom_pesan.index', 'admin.waba_chat.index']);
+                    $isWhatsappActive = in_array($currRoute, ['admin.custom_pesan.index', 'admin.waba_chat.index', 'admin.webhook_template.index']);
                 @endphp
                 <li class="sidebar-menu-item has-submenu {{ $isWhatsappActive ? 'active open' : '' }}">
                     <a href="javascript:void(0)" class="submenu-toggle">
@@ -1084,6 +1084,12 @@
                             <a href="{{ route('admin.custom_pesan.index') }}">
                                 <i class="fa-solid fa-comment-dots"></i>
                                 <span>Custom Pesan WA</span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ $currRoute == 'admin.webhook_template.index' ? 'active' : '' }}">
+                            <a href="{{ route('admin.webhook_template.index') }}">
+                                <i class="fa-solid fa-robot"></i>
+                                <span>Auto-Reply Webhook</span>
                             </a>
                         </li>
                     </ul>
