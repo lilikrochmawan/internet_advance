@@ -1062,8 +1062,31 @@
 
 
             @if(Auth::user()->hasMenuAccess('custom_pesan'))
-                <li class="sidebar-menu-item {{ $currRoute == 'admin.custom_pesan.index' ? 'active' : '' }}">
-                    <a href="{{ route('admin.custom_pesan.index') }}"><i class="fa-solid fa-comment-dots"></i><span>Custom Pesan WA</span></a>
+                @php
+                    $isWhatsappActive = in_array($currRoute, ['admin.custom_pesan.index', 'admin.waba_chat.index']);
+                @endphp
+                <li class="sidebar-menu-item has-submenu {{ $isWhatsappActive ? 'active open' : '' }}">
+                    <a href="javascript:void(0)" class="submenu-toggle">
+                        <span class="submenu-label">
+                            <i class="fa-brands fa-whatsapp" style="font-size: 1.1rem; width: 24px; text-align: center;"></i>
+                            <span>Whatsapp</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li class="submenu-item {{ $currRoute == 'admin.waba_chat.index' ? 'active' : '' }}">
+                            <a href="{{ route('admin.waba_chat.index') }}">
+                                <i class="fa-solid fa-message"></i>
+                                <span>WABA Webhook</span>
+                            </a>
+                        </li>
+                        <li class="submenu-item {{ $currRoute == 'admin.custom_pesan.index' ? 'active' : '' }}">
+                            <a href="{{ route('admin.custom_pesan.index') }}">
+                                <i class="fa-solid fa-comment-dots"></i>
+                                <span>Custom Pesan WA</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             @endif
 

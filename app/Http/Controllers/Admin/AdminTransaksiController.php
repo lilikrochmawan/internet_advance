@@ -407,13 +407,7 @@ class AdminTransaksiController extends Controller
                     $pesanBayar = str_replace('$harinin', $sekarangs, $pesanBayar);
                     $pesanBayar = str_replace('$no_telp', $pelanggan->no_telp, $pesanBayar);
 
-                    Http::timeout(10)->withHeaders([
-                        'Authorization' => $row_token->token
-                    ])->asForm()->post('https://api.fonnte.com/send', [
-                        'target' => $pelanggan->no_telp,
-                        'message' => $pesanBayar,
-                        'countryCode' => '62'
-                    ]);
+                    app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesanBayar);
                 }
             } catch (\Exception $e) {
                 \Log::error('Manual Payment WhatsApp Notification Error: ' . $e->getMessage());
@@ -561,24 +555,11 @@ class AdminTransaksiController extends Controller
                 $pesan = str_replace('$nama', $pelanggan->nama_pelanggan, $pesan);
                 $pesan = str_replace('$tagihan', number_format($tagihan->jml_bayar, 0, ',', '.'), $pesan);
 
-                try {
-                    $response = Http::timeout(10)->withHeaders([
-                        'Authorization' => $tokenInfo->token
-                    ])->asForm()->post('https://api.fonnte.com/send', [
-                        'target' => $pelanggan->no_telp,
-                        'message' => $pesan,
-                        'countryCode' => '62'
-                    ]);
-
-                    $resData = $response->json();
-                    if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                        $waMessage = ' & Notifikasi WhatsApp terkirim!';
-                    } else {
-                        $reason = $resData['reason'] ?? $resData['message'] ?? 'Device Fonnte tidak aktif.';
-                        $waMessage = ' tetapi Gagal mengirim WA: ' . $reason;
-                    }
-                } catch (\Exception $e) {
-                    $waMessage = ' tetapi Gagal mengirim WA: ' . $e->getMessage();
+                $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+                if ($isSent) {
+                    $waMessage = ' & Notifikasi WhatsApp terkirim!';
+                } else {
+                    $waMessage = ' tetapi Gagal mengirim WA: Periksa log sistem.';
                 }
             }
             
@@ -717,23 +698,15 @@ class AdminTransaksiController extends Controller
         $pesan = str_replace('$tagihan', number_format($tagihan->jml_bayar, 0, ',', '.'), $pesan);
         $pesan = str_replace('$hari_ini', \Carbon\Carbon::now()->translatedFormat('d F Y'), $pesan);
 
-        // Kirim via Fonnte API
-        $response = Http::timeout(10)->withHeaders([
-            'Authorization' => $tokenInfo->token
-        ])->asForm()->post('https://api.fonnte.com/send', [
-            'target' => $pelanggan->no_telp,
-            'message' => $pesan,
-            'countryCode' => '62'
-        ]);
+        // Kirim via WhatsApp Service
+        $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
 
-        $resData = $response->json();
-        if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
+        if ($isSent) {
             $tagihan->update(['terkirim' => 'terkirim']);
             return redirect()->route('admin.transaksi.index')->with('success', 'Notifikasi penagihan WhatsApp berhasil dikirim ke ' . $pelanggan->nama_pelanggan . '!');
         }
 
-        $reason = $resData['reason'] ?? $resData['message'] ?? 'Device Fonnte tidak terhubung atau token tidak valid.';
-        return back()->withErrors(['error' => 'Gagal mengirim pesan WhatsApp. Fonnte Response: ' . $reason]);
+        return back()->withErrors(['error' => 'Gagal mengirim pesan WhatsApp. Silakan periksa log sistem.']);
     }
 
     public function showGenerate(Request $request)
@@ -931,22 +904,14 @@ class AdminTransaksiController extends Controller
         $pesan = str_replace('$jatuh_tempo', Carbon::parse($tagihan->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo, $pesan);
         $pesan = str_replace('$sekarang_format', Carbon::now()->translatedFormat('d F Y H:i') . ' WIB', $pesan);
 
-        // Kirim via Fonnte API
-        $response = Http::timeout(10)->withHeaders([
-            'Authorization' => $tokenInfo->token
-        ])->asForm()->post('https://api.fonnte.com/send', [
-            'target' => $pelanggan->no_telp,
-            'message' => $pesan,
-            'countryCode' => '62'
-        ]);
+        // Kirim via WhatsApp Service
+        $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
 
-        $resData = $response->json();
-        if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
+        if ($isSent) {
             return redirect()->route('admin.transaksi.index')->with('success', 'Reminder penagihan WhatsApp berhasil dikirim ke ' . $pelanggan->nama_pelanggan . '!');
         }
 
-        $reason = $resData['reason'] ?? $resData['message'] ?? 'Device Fonnte tidak terhubung atau token tidak valid.';
-        return back()->withErrors(['error' => 'Gagal mengirim reminder WhatsApp. Fonnte Response: ' . $reason]);
+        return back()->withErrors(['error' => 'Gagal mengirim reminder WhatsApp. Silakan periksa log sistem.']);
     }
 
     public function broadcast(Request $request)
@@ -1018,42 +983,24 @@ class AdminTransaksiController extends Controller
             $pesan = str_replace('$tagihan', number_format($tx->jml_bayar, 0, ',', '.'), $pesan);
             $pesan = str_replace('$hari_ini', Carbon::now()->translatedFormat('d F Y'), $pesan);
 
-            try {
-                $response = Http::timeout(10)->withHeaders([
-                    'Authorization' => $tokenInfo->token
-                ])->asForm()->post('https://api.fonnte.com/send', [
-                    'target' => $pelanggan->no_telp,
-                    'message' => $pesan,
-                    'countryCode' => '62'
-                ]);
+            $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
 
-                $resData = $response->json();
-                if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                    $tx->update(['terkirim' => 'terkirim']);
-                    $successCount++;
-                    $results[] = [
-                        'status' => true,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => 'Terkirim'
-                    ];
-                } else {
-                    $failCount++;
-                    $reason = $resData['reason'] ?? $resData['message'] ?? 'Gagal mengirim (HTTP ' . $response->status() . ')';
-                    $results[] = [
-                        'status' => false,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => $reason
-                    ];
-                }
-            } catch (\Exception $e) {
+            if ($isSent) {
+                $tx->update(['terkirim' => 'terkirim']);
+                $successCount++;
+                $results[] = [
+                    'status' => true,
+                    'nama' => $pelanggan->nama_pelanggan,
+                    'no_telp' => $pelanggan->no_telp,
+                    'message' => 'Terkirim'
+                ];
+            } else {
                 $failCount++;
                 $results[] = [
                     'status' => false,
                     'nama' => $pelanggan->nama_pelanggan,
                     'no_telp' => $pelanggan->no_telp,
-                    'message' => $e->getMessage()
+                    'message' => 'Gagal terkirim, periksa log sistem.'
                 ];
             }
         }
@@ -1135,41 +1082,23 @@ class AdminTransaksiController extends Controller
             $pesan = str_replace('$jatuh_tempo', Carbon::parse($tx->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo, $pesan);
             $pesan = str_replace('$sekarang_format', Carbon::now()->translatedFormat('d F Y H:i') . ' WIB', $pesan);
 
-            try {
-                $response = Http::timeout(10)->withHeaders([
-                    'Authorization' => $tokenInfo->token
-                ])->asForm()->post('https://api.fonnte.com/send', [
-                    'target' => $pelanggan->no_telp,
-                    'message' => $pesan,
-                    'countryCode' => '62'
-                ]);
+            $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
 
-                $resData = $response->json();
-                if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                    $successCount++;
-                    $results[] = [
-                        'status' => true,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => 'Terkirim'
-                    ];
-                } else {
-                    $failCount++;
-                    $reason = $resData['reason'] ?? $resData['message'] ?? 'Gagal mengirim (HTTP ' . $response->status() . ')';
-                    $results[] = [
-                        'status' => false,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => $reason
-                    ];
-                }
-            } catch (\Exception $e) {
+            if ($isSent) {
+                $successCount++;
+                $results[] = [
+                    'status' => true,
+                    'nama' => $pelanggan->nama_pelanggan,
+                    'no_telp' => $pelanggan->no_telp,
+                    'message' => 'Terkirim'
+                ];
+            } else {
                 $failCount++;
                 $results[] = [
                     'status' => false,
                     'nama' => $pelanggan->nama_pelanggan,
                     'no_telp' => $pelanggan->no_telp,
-                    'message' => $e->getMessage()
+                    'message' => 'Gagal terkirim, periksa log sistem.'
                 ];
             }
         }
@@ -1327,25 +1256,12 @@ class AdminTransaksiController extends Controller
                     $pesan = str_replace('$nama', $pelanggan->nama_pelanggan, $pesan);
                     $pesan = str_replace('$tagihan', number_format($tx->jml_bayar, 0, ',', '.'), $pesan);
 
-                    try {
-                        $response = Http::timeout(10)->withHeaders([
-                            'Authorization' => $tokenInfo->token
-                        ])->asForm()->post('https://api.fonnte.com/send', [
-                            'target' => $pelanggan->no_telp,
-                            'message' => $pesan,
-                            'countryCode' => '62'
-                        ]);
-
-                        $resData = $response->json();
-                        if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                            $waSent = true;
-                            $waMessage = 'Terblokir & Notifikasi WA Terkirim';
-                        } else {
-                            $reason = $resData['reason'] ?? $resData['message'] ?? 'Device Fonnte tidak aktif.';
-                            $waMessage = 'Terblokir & Gagal Kirim WA: ' . $reason;
-                        }
-                    } catch (\Exception $e) {
-                        $waMessage = 'Terblokir & Gagal Kirim WA: ' . $e->getMessage();
+                    $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+                    if ($isSent) {
+                        $waSent = true;
+                        $waMessage = 'Terblokir & Notifikasi WA Terkirim';
+                    } else {
+                        $waMessage = 'Terblokir & Gagal Kirim WA: Periksa log sistem.';
                     }
                 }
 

@@ -243,27 +243,13 @@ class AutoBlockPelanggan extends Command
                         $pesan = str_replace('$jatuh_tempo', \Carbon\Carbon::parse($tx->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo, $pesan);
                         $pesan = str_replace('$hari_ini', \Carbon\Carbon::now()->translatedFormat('d F Y'), $pesan);
 
-                        try {
-                            $response = \Illuminate\Support\Facades\Http::timeout(10)->withHeaders([
-                                'Authorization' => $tokenInfo->token
-                            ])->asForm()->post('https://api.fonnte.com/send', [
-                                'target' => $pelanggan->no_telp,
-                                'message' => $pesan,
-                                'countryCode' => '62'
-                            ]);
-
-                            $resData = $response->json();
-                            if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                                $this->info('Notifikasi WA pemblokiran terkirim ke: ' . $pelanggan->nama_pelanggan);
-                                Log::info('AutoBlockPelanggan: Notifikasi WA pemblokiran terkirim ke ' . $pelanggan->nama_pelanggan);
-                            } else {
-                                $reason = $resData['reason'] ?? $resData['message'] ?? 'Device Fonnte tidak aktif.';
-                                $this->warn('Gagal kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan . ': ' . $reason);
-                                Log::warning('AutoBlockPelanggan: Gagal kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan . ': ' . $reason);
-                            }
-                        } catch (\Exception $e) {
-                            $this->error('Exception kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan . ': ' . $e->getMessage());
-                            Log::error('AutoBlockPelanggan: Exception kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan . ': ' . $e->getMessage());
+                        $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+                        if ($isSent) {
+                            $this->info('Notifikasi WA pemblokiran terkirim ke: ' . $pelanggan->nama_pelanggan);
+                            Log::info('AutoBlockPelanggan: Notifikasi WA pemblokiran terkirim ke ' . $pelanggan->nama_pelanggan);
+                        } else {
+                            $this->warn('Gagal kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan . ': Periksa log sistem.');
+                            Log::warning('AutoBlockPelanggan: Gagal kirim WA pemblokiran ke ' . $pelanggan->nama_pelanggan);
                         }
 
                         // Jeda 5 detik antar pengiriman pesan WA untuk menghindari rate limit Fonnte
@@ -298,22 +284,29 @@ class AutoBlockPelanggan extends Command
             }
             $processedUnblockCustomerIds[] = $pelanggan->id_pelanggan;
 
-            // Cek status tagihan bulan berjalan
-            $currentBill = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
-                ->where('bulan_tahun', $currentPeriod)
+            $lastMonthPeriod = now()->subMonth()->format('mY');
+            $shouldUnblock = true;
+
+            // 1. Cek tagihan 1 bulan sebelumnya
+            $lastMonthBill = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
+                ->where('bulan_tahun', $lastMonthPeriod)
                 ->first();
 
-            $shouldUnblock = true;
-            if ($currentBill && $currentBill->status_bayar != 1) {
-                // Ambil jatuh tempo dari transaksi (tagihan), fallback ke pelanggan jika null/kosong
-                $jatuhTempo = $currentBill->jatuh_tempo;
-                if (is_null($jatuhTempo) || $jatuhTempo === '') {
-                    $jatuhTempo = $pelanggan->jatuh_tempo;
-                }
+            // Jika tagihan bulan lalu ada dan belum lunas, TETAP TERBLOKIR
+            if ($lastMonthBill && $lastMonthBill->status_bayar != 1) {
+                $shouldUnblock = false;
+            }
 
-                if (!empty($jatuhTempo)) {
-                    if (\Carbon\Carbon::parse($jatuhTempo)->lt($now)) {
-                        $shouldUnblock = false;
+            // 2. Jika bulan lalu lunas/aman, cek tagihan bulan berjalan
+            if ($shouldUnblock) {
+                $currentBill = Tagihan::where('id_pelanggan', $pelanggan->id_pelanggan)
+                    ->where('bulan_tahun', $currentPeriod)
+                    ->first();
+
+                if ($currentBill && $currentBill->status_bayar != 1) {
+                    $jatuhTempo = $currentBill->jatuh_tempo ?: $pelanggan->jatuh_tempo;
+                    if (!empty($jatuhTempo) && \Carbon\Carbon::parse($jatuhTempo)->lt($now)) {
+                        $shouldUnblock = false; // Sudah lewat jatuh tempo, tetap terblokir
                     }
                 }
             }

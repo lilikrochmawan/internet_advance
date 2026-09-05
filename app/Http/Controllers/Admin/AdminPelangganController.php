@@ -340,12 +340,7 @@ class AdminPelangganController extends Controller
 
                 $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
                 if ($tokenInfo) {
-                    Http::withHeaders([
-                        'Authorization' => $tokenInfo->token
-                    ])->asForm()->post('https://api.fonnte.com/send', [
-                        'target' => $no_telp,
-                        'message' => $pesan,
-                    ]);
+                    app(\App\Services\WhatsAppService::class)->sendMessage($no_telp, $pesan);
                 }
             }
 

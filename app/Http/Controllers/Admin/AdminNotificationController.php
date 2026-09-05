@@ -110,42 +110,23 @@ class AdminNotificationController extends Controller
                     $pesan
                 );
 
-                try {
-                    $response = Http::timeout(10)->withHeaders([
-                        'Authorization' => $tokenInfo->token
-                    ])->asForm()->post('https://api.fonnte.com/send', [
-                        'target' => $pelanggan->no_telp,
-                        'message' => $customPesan,
-                        'countryCode' => '62'
-                    ]);
-
-                    $resData = $response->json();
-                    if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                        $berhasil++;
-                        $results[] = [
-                            'status' => true,
-                            'nama' => $pelanggan->nama_pelanggan,
-                            'no_telp' => $pelanggan->no_telp,
-                            'message' => 'Terkirim'
-                        ];
-                    } else {
-                        $gagal++;
-                        $reason = $resData['reason'] ?? $resData['message'] ?? 'Fonnte error atau device offline.';
-                        $results[] = [
-                            'status' => false,
-                            'nama' => $pelanggan->nama_pelanggan,
-                            'no_telp' => $pelanggan->no_telp,
-                            'message' => $reason
-                        ];
-                    }
-                } catch (\Exception $e) {
+                $waService = app(\App\Services\WhatsAppService::class);
+                $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+                if ($isSent) {
+                    $berhasil++;
+                    $results[] = [
+                        'status' => true,
+                        'nama' => $pelanggan->nama_pelanggan,
+                        'no_telp' => $pelanggan->no_telp,
+                        'message' => 'Terkirim'
+                    ];
+                } else {
                     $gagal++;
-                    Log::error("Broadcast WA error to {$pelanggan->nama_pelanggan}: " . $e->getMessage());
                     $results[] = [
                         'status' => false,
                         'nama' => $pelanggan->nama_pelanggan,
                         'no_telp' => $pelanggan->no_telp,
-                        'message' => 'Koneksi API Gagal: ' . $e->getMessage()
+                        'message' => 'Gagal terkirim, periksa log sistem.'
                     ];
                 }
             }
@@ -217,42 +198,23 @@ class AdminNotificationController extends Controller
                 $pesan
             );
 
-            try {
-                $response = Http::timeout(10)->withHeaders([
-                    'Authorization' => $tokenInfo->token
-                ])->asForm()->post('https://api.fonnte.com/send', [
-                    'target' => $pelanggan->no_telp,
-                    'message' => $customPesan,
-                    'countryCode' => '62'
-                ]);
-
-                $resData = $response->json();
-                if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                    $berhasil++;
-                    $results[] = [
-                        'status' => true,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => 'Terkirim'
-                    ];
-                } else {
-                    $gagal++;
-                    $reason = $resData['reason'] ?? $resData['message'] ?? 'Fonnte error atau device offline.';
-                    $results[] = [
-                        'status' => false,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => $reason
-                    ];
-                }
-            } catch (\Exception $e) {
+            $waService = app(\App\Services\WhatsAppService::class);
+            $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            if ($isSent) {
+                $berhasil++;
+                $results[] = [
+                    'status' => true,
+                    'nama' => $pelanggan->nama_pelanggan,
+                    'no_telp' => $pelanggan->no_telp,
+                    'message' => 'Terkirim'
+                ];
+            } else {
                 $gagal++;
-                Log::error("Broadcast WA ODP error to {$pelanggan->nama_pelanggan}: " . $e->getMessage());
                 $results[] = [
                     'status' => false,
                     'nama' => $pelanggan->nama_pelanggan,
                     'no_telp' => $pelanggan->no_telp,
-                    'message' => 'Koneksi API Gagal: ' . $e->getMessage()
+                    'message' => 'Gagal terkirim, periksa log sistem.'
                 ];
             }
         }
@@ -327,42 +289,23 @@ class AdminNotificationController extends Controller
                 $pesan
             );
 
-            try {
-                $response = Http::timeout(10)->withHeaders([
-                    'Authorization' => $tokenInfo->token
-                ])->asForm()->post('https://api.fonnte.com/send', [
-                    'target' => $pelanggan->no_telp,
-                    'message' => $customPesan,
-                    'countryCode' => '62'
-                ]);
-
-                $resData = $response->json();
-                if ($response->successful() && isset($resData['status']) && $resData['status'] === true) {
-                    $berhasil++;
-                    $results[] = [
-                        'status' => true,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => 'Terkirim'
-                    ];
-                } else {
-                    $gagal++;
-                    $reason = $resData['reason'] ?? $resData['message'] ?? 'Fonnte error atau device offline.';
-                    $results[] = [
-                        'status' => false,
-                        'nama' => $pelanggan->nama_pelanggan,
-                        'no_telp' => $pelanggan->no_telp,
-                        'message' => $reason
-                    ];
-                }
-            } catch (\Exception $e) {
+            $waService = app(\App\Services\WhatsAppService::class);
+            $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            if ($isSent) {
+                $berhasil++;
+                $results[] = [
+                    'status' => true,
+                    'nama' => $pelanggan->nama_pelanggan,
+                    'no_telp' => $pelanggan->no_telp,
+                    'message' => 'Terkirim'
+                ];
+            } else {
                 $gagal++;
-                Log::error("Broadcast WA ODC error to {$pelanggan->nama_pelanggan}: " . $e->getMessage());
                 $results[] = [
                     'status' => false,
                     'nama' => $pelanggan->nama_pelanggan,
                     'no_telp' => $pelanggan->no_telp,
-                    'message' => 'Koneksi API Gagal: ' . $e->getMessage()
+                    'message' => 'Gagal terkirim, periksa log sistem.'
                 ];
             }
         }

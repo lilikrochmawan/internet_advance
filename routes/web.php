@@ -190,6 +190,9 @@ Route::prefix('administrator')->group(function () {
         Route::post('/tr069/auto-link', [AdminAcsController::class, 'autoLink'])->name('admin.tr069.autolink');
 
         // Custom Pesan WhatsApp Templates
+        Route::get('/waba-chat', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'index'])->name('admin.waba_chat.index');
+        Route::get('/waba-chat/load/{no_telp}', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'loadMessages'])->name('admin.waba_chat.load');
+        Route::post('/waba-chat/reply', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'reply'])->name('admin.waba_chat.reply');
         Route::get('/custom-pesan', [AdminCustomPesanController::class, 'index'])->name('admin.custom_pesan.index');
         Route::post('/custom-pesan/notif', [AdminCustomPesanController::class, 'updateNotif'])->name('admin.custom_pesan.notif');
         Route::post('/custom-pesan/bayar', [AdminCustomPesanController::class, 'updateBayar'])->name('admin.custom_pesan.bayar');

@@ -130,17 +130,21 @@ class AdminPengaturanController extends Controller
     public function updateToken(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'wa_gateway' => 'required|in:fonnte,bablast',
+            'token' => 'nullable|string',
+            'bablast_token' => 'nullable|string',
         ]);
 
         $status = $request->has('status') ? 'aktif' : 'nonaktif';
 
         DB::table('tbl_token')->where('id_token', 1)->update([
-            'token' => htmlspecialchars(strip_tags($request->token)),
+            'wa_gateway' => htmlspecialchars(strip_tags($request->wa_gateway)),
+            'token' => $request->token ? htmlspecialchars(strip_tags($request->token)) : null,
+            'bablast_token' => $request->bablast_token ? htmlspecialchars(strip_tags($request->bablast_token)) : null,
             'status' => $status,
         ]);
 
-        return redirect()->route('admin.pengaturan.index')->with('success', 'Token WhatsApp Fonnte berhasil diperbarui!');
+        return redirect()->route('admin.pengaturan.index')->with('success', 'Konfigurasi WhatsApp Gateway berhasil diperbarui!');
     }
 
     /**
