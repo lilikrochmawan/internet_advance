@@ -20,9 +20,9 @@ class BablastWebhookController extends Controller
         // Cek Event
         $event = $payload['event'] ?? null;
         
-        if ($event === 'messages_incoming') {
+        if (in_array($event, ['messages_incoming', 'incoming_message'])) {
             return $this->handleIncomingMessage($payload);
-        } elseif ($event === 'messages_status') {
+        } elseif (in_array($event, ['messages_status', 'message_status'])) {
             return $this->handleMessageStatus($payload);
         }
         
@@ -35,8 +35,8 @@ class BablastWebhookController extends Controller
     {
         // Ekstrak pengirim dan pesan
         // Bablast WABA payload format
-        $from = $payload['data']['from'] ?? $payload['from'] ?? $payload['phone'] ?? null;
-        $messageText = $payload['data']['message']['text']['body'] ?? $payload['data']['message'] ?? $payload['message'] ?? $payload['text'] ?? '';
+        $from = $payload['data']['from_phone'] ?? $payload['data']['from'] ?? $payload['from'] ?? $payload['phone'] ?? null;
+        $messageText = $payload['data']['content'] ?? $payload['data']['message']['text']['body'] ?? $payload['data']['message'] ?? $payload['message'] ?? $payload['text'] ?? '';
         
         if (!$from) {
             Log::warning('Bablast Webhook: Pengirim tidak ditemukan', $payload);
