@@ -8,6 +8,7 @@ use App\Models\WabaChat;
 use App\Models\Pelanggan;
 use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AdminWabaChatController extends Controller
 {
@@ -97,5 +98,34 @@ class AdminWabaChatController extends Controller
             'status' => 'success',
             'message' => $chat
         ]);
+    }
+
+    public function fetchMedia(Request $request)
+    {
+        $url = $request->query('url');
+        if (!$url) {
+            return abort(404, 'URL media tidak ditemukan.');
+        }
+
+        // Ambil token dari Fonnte / WABA
+        $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
+        if (!$tokenInfo) {
+            return abort(403, 'Token WhatsApp belum dikonfigurasi.');
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => $tokenInfo->token
+            ])->get($url);
+
+            if ($response->successful()) {
+                return response($response->body(), 200)
+                    ->header('Content-Type', $response->header('Content-Type'));
+            } else {
+                return abort($response->status(), 'Gagal mengambil gambar dari server asal.');
+            }
+        } catch (\Exception $e) {
+            return abort(500, 'Terjadi kesalahan saat memuat media: ' . $e->getMessage());
+        }
     }
 }

@@ -192,6 +192,7 @@ Route::prefix('administrator')->group(function () {
 
         // Custom Pesan WhatsApp Templates
         Route::get('/waba-chat', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'index'])->name('admin.waba_chat.index');
+        Route::get('/waba-chat/media', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'fetchMedia'])->name('admin.waba_chat.media');
         Route::get('/waba-chat/load/{no_telp}', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'loadMessages'])->name('admin.waba_chat.load');
         Route::post('/waba-chat/reply', [App\Http\Controllers\Admin\AdminWabaChatController::class, 'reply'])->name('admin.waba_chat.reply');
         Route::get('/custom-pesan', [AdminCustomPesanController::class, 'index'])->name('admin.custom_pesan.index');
