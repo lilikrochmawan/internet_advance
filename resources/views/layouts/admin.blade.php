@@ -1078,6 +1078,9 @@
                             <a href="{{ route('admin.waba_chat.index') }}">
                                 <i class="fa-solid fa-message"></i>
                                 <span>WABA Webhook</span>
+                                @if(isset($unreadWabaCount) && $unreadWabaCount > 0)
+                                    <span class="badge badge-danger" style="margin-left: 5px; background-color: #dc3545; color: white; border-radius: 50%; padding: 3px 6px; font-size: 0.75rem;">{{ $unreadWabaCount }}</span>
+                                @endif
                             </a>
                         </li>
                         <li class="submenu-item {{ $currRoute == 'admin.custom_pesan.index' ? 'active' : '' }}">

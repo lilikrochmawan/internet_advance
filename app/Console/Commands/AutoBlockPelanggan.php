@@ -243,7 +243,8 @@ class AutoBlockPelanggan extends Command
                         $pesan = str_replace('$jatuh_tempo', \Carbon\Carbon::parse($tx->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo, $pesan);
                         $pesan = str_replace('$hari_ini', \Carbon\Carbon::now()->translatedFormat('d F Y'), $pesan);
 
-                        $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+                        $templateParams = $blokirSetting->template_params ? explode(',', $blokirSetting->template_params) : [];
+                        $isSent = app(\App\Services\WhatsAppService::class)->sendTemplateMessage($pelanggan->no_telp, $pesan, $blokirSetting->template_name ?? null, $templateParams, $blokirSetting->template_language ?? 'id');
                         if ($isSent) {
                             $this->info('Notifikasi WA pemblokiran terkirim ke: ' . $pelanggan->nama_pelanggan);
                             Log::info('AutoBlockPelanggan: Notifikasi WA pemblokiran terkirim ke ' . $pelanggan->nama_pelanggan);

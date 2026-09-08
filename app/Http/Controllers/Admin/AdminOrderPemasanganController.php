@@ -591,7 +591,8 @@ class AdminOrderPemasanganController extends Controller
 
                     $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
                     if ($tokenInfo) {
-                        app(\App\Services\WhatsAppService::class)->sendMessage($no_telp, $pesan);
+                        $templateParams = $notifikasi->template_params ? explode(',', $notifikasi->template_params) : [];
+                        app(\App\Services\WhatsAppService::class)->sendTemplateMessage($no_telp, $pesan, $notifikasi->template_name ?? null, $templateParams, $notifikasi->template_language ?? 'id');
                     }
                 }
             }

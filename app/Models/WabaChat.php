@@ -15,6 +15,7 @@ class WabaChat extends Model
         'no_telp',
         'nama',
         'pesan',
+        'media_url',
         'tipe',
         'status',
     ];

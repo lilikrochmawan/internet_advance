@@ -47,6 +47,12 @@ class BablastWebhookController extends Controller
         // Standarisasi nomor telepon
         $from = preg_replace('/[^0-9]/', '', $from);
         
+        // Extract Media URL if present
+        $mediaUrl = $payload['data']['url'] ?? $payload['data']['media_url'] ?? $payload['data']['message']['image']['link'] ?? $payload['data']['message']['document']['link'] ?? $payload['url'] ?? $payload['media'] ?? null;
+        if (empty($messageText) && $mediaUrl) {
+            $messageText = '[Gambar/Media]';
+        }
+
         Log::info("Bablast Incoming dari {$from}: {$messageText}");
         
         $shortPhone = substr($from, -9);
@@ -57,6 +63,7 @@ class BablastWebhookController extends Controller
             'no_telp' => $from,
             'nama' => $pelanggan ? $pelanggan->nama_pelanggan : 'Tidak Dikenal',
             'pesan' => $messageText,
+            'media_url' => $mediaUrl,
             'tipe' => 'incoming',
             'status' => 'received',
         ]);
@@ -208,6 +215,7 @@ class BablastWebhookController extends Controller
             'no_telp' => $no_telp,
             'nama' => $nama,
             'pesan' => $pesan,
+            'media_url' => $mediaUrl,
             'tipe' => 'outgoing',
             'status' => 'sent',
         ]);

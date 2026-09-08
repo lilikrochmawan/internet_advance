@@ -294,7 +294,13 @@
         
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${bubbleClass}`;
-        bubble.innerHTML = `${msg.pesan} <span class="msg-time">${formatDate(msg.created_at)}</span>`;
+        
+        let mediaHtml = '';
+        if (msg.media_url) {
+            mediaHtml = `<div style="margin-bottom: 6px;"><a href="${msg.media_url}" target="_blank"><img src="${msg.media_url}" style="max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: cover;" alt="Media" onerror="this.outerHTML='<a href=\\'${msg.media_url}\\' target=\\'_blank\\' style=\\'color:#25D366; text-decoration:none;\\'><i class=\\'fa-solid fa-paperclip\\'></i> Buka Lampiran</a>'"></a></div>`;
+        }
+        
+        bubble.innerHTML = `${mediaHtml}<div style="word-wrap: break-word;">${msg.pesan.replace(/\\n/g, '<br>')}</div> <span class="msg-time">${formatDate(msg.created_at)}</span>`;
         
         document.getElementById('chat-messages').appendChild(bubble);
     }

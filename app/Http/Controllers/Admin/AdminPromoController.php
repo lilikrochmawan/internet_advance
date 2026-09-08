@@ -173,7 +173,8 @@ class AdminPromoController extends Controller
                     $pesan = str_replace('$mulai_promo', $mulaiFormat, $pesan);
                     $pesan = str_replace('$selesai_promo', $selesaiFormat, $pesan);
 
-                    app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+                    $templateParams = $notifPromo->template_params ? explode(',', $notifPromo->template_params) : [];
+                    app(\App\Services\WhatsAppService::class)->sendTemplateMessage($pelanggan->no_telp, $pesan, $notifPromo->template_name ?? null, $templateParams, $notifPromo->template_language ?? 'id');
                 }
             } catch (\Exception $e) {
                 Log::error('Promo WhatsApp Notification Error: ' . $e->getMessage());

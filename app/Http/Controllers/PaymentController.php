@@ -593,7 +593,8 @@ class PaymentController extends Controller
                     $pesanBayar = str_replace('$harinin', $sekarangs, $pesanBayar);
                     $pesanBayar = str_replace('$no_telp', $data_tagihan->no_telp, $pesanBayar);
 
-                    app(\App\Services\WhatsAppService::class)->sendMessage($data_tagihan->no_telp, $pesanBayar);
+                    $templateParams = $bayar->template_params ? explode(',', $bayar->template_params) : [];
+                    app(\App\Services\WhatsAppService::class)->sendTemplateMessage($data_tagihan->no_telp, $pesanBayar, $bayar->template_name ?? null, $templateParams, $bayar->template_language ?? 'id');
                 }
             } catch (\Exception $e) {
                 Log::error('Midtrans Webhook WhatsApp Notification Error: ' . $e->getMessage());

@@ -65,6 +65,7 @@ Route::prefix('administrator')->group(function () {
 
         // CRUD Pelanggan
         Route::get('/pelanggan', [AdminPelangganController::class, 'index'])->name('admin.pelanggan.index');
+        Route::get('/pelanggan/export', [AdminPelangganController::class, 'exportContacts'])->name('admin.pelanggan.export');
         Route::get('/pelanggan/mikrotik-secrets', [AdminPelangganController::class, 'getMikrotikSecrets'])->name('admin.pelanggan.mikrotik_secrets');
         Route::post('/pelanggan', [AdminPelangganController::class, 'store'])->name('admin.pelanggan.store');
         Route::post('/pelanggan/update', [AdminPelangganController::class, 'update'])->name('admin.pelanggan.update');

@@ -37,6 +37,35 @@ class WhatsAppService
         }
     }
 
+    public function sendTemplateMessage(string $target, string $fallbackMessage, ?string $templateName = null, array $parameters = [], string $language = 'id'): bool
+    {
+        $tokenInfo = WaToken::find(1);
+
+        if (!$tokenInfo) {
+            Log::warning('WhatsApp Gateway: Konfigurasi tidak ditemukan di tbl_token.');
+            return false;
+        }
+
+        // Clean target number
+        $target = preg_replace('/[^0-9]/', '', $target);
+        if (str_starts_with($target, '0')) {
+            $target = '62' . substr($target, 1);
+        }
+
+        if ($target === '') {
+            return false;
+        }
+
+        $gateway = $tokenInfo->wa_gateway ?? 'fonnte';
+
+        if ($gateway === 'bablast' && !empty($templateName)) {
+            return $this->sendTemplateViaBablast($target, $templateName, $parameters, $tokenInfo->bablast_token, $language);
+        } else {
+            // Fallback to normal text message for Fonnte or if template name is empty
+            return $this->sendViaFonnte($target, $fallbackMessage, $tokenInfo->token);
+        }
+    }
+
     private function sendViaFonnte(string $target, string $message, ?string $token, ?string $mediaUrl = null): bool
     {
         if (!$token) {
@@ -88,8 +117,12 @@ class WhatsAppService
             ];
             
             if ($mediaUrl) {
-                // For Bablast WABA, media is usually sent with specific types, but we'll try sending it via media_url parameter
+                // Ensure mediaUrl is absolute. If it starts with / , we prepend the request host or env APP_URL.
+                // It should already be absolute because we used asset(), but just in case:
+                
+                // For Bablast WABA, media is usually sent with specific types
                 $payload['media_url'] = $mediaUrl;
+                $payload['url'] = $mediaUrl; // some WABA gateways use 'url' instead
                 $payload['type'] = 'image'; // assumption for Bablast
             }
 
@@ -109,6 +142,41 @@ class WhatsAppService
             return true;
         } catch (\Throwable $exception) {
             Log::error('WA Bablast error: ' . $exception->getMessage());
+            return false;
+        }
+    }
+
+    private function sendTemplateViaBablast(string $target, string $templateName, array $parameters, ?string $token, string $language = 'id'): bool
+    {
+        if (!$token) {
+            Log::warning('WA Bablast: Token Bablast belum dikonfigurasi (Template).');
+            return false;
+        }
+
+        try {
+            $payload = [
+                'phone' => $target,
+                'template_name' => $templateName,
+                'language' => $language,
+                'parameters' => $parameters, // Bablast supports flat array e.g. ["Budi", "Rp 150.000"]
+            ];
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type' => 'application/json',
+            ])->post('https://api.bablast.id/waba/send-template', $payload);
+
+            $resData = $response->json();
+
+            if (!$response->successful() || (isset($resData['success']) && $resData['success'] === false)) {
+                $reason = $resData['message'] ?? 'Bablast Template error.';
+                Log::warning("WA Bablast Template gagal dikirim ke {$target}. Reason: {$reason}");
+                return false;
+            }
+
+            return true;
+        } catch (\Throwable $exception) {
+            Log::error('WA Bablast Template error: ' . $exception->getMessage());
             return false;
         }
     }

@@ -132,7 +132,22 @@ class SendAutoBillingNotifications extends Command
             $pesan = str_replace('$tagihan', number_format($tx->jml_bayar, 0, ',', '.'), $pesan);
             $pesan = str_replace('$hari_ini', Carbon::now()->translatedFormat('d F Y'), $pesan);
 
-            $isSent = app(\App\Services\WhatsAppService::class)->sendMessage($pelanggan->no_telp, $pesan);
+            // Menyiapkan Parameter Template WABA
+            $templateParams = [];
+            if (!empty($notifSetting->template_name) && !empty($notifSetting->template_params)) {
+                $paramsList = explode(',', $notifSetting->template_params);
+                foreach ($paramsList as $param) {
+                    $param = trim($param);
+                    if ($param === 'nama') $templateParams[] = $pelanggan->nama_pelanggan;
+                    elseif ($param === 'no_telp') $templateParams[] = $pelanggan->no_telp;
+                    elseif ($param === 'jatuh_tempo') $templateParams[] = Carbon::parse($tx->jatuh_tempo)->translatedFormat('d F Y') ?? $pelanggan->jatuh_tempo;
+                    elseif ($param === 'tagihan') $templateParams[] = number_format($tx->jml_bayar, 0, ',', '.');
+                    elseif ($param === 'hari_ini') $templateParams[] = Carbon::now()->translatedFormat('d F Y');
+                    else $templateParams[] = $param; // fallback to whatever string is typed
+                }
+            }
+
+            $isSent = app(\App\Services\WhatsAppService::class)->sendTemplateMessage($pelanggan->no_telp, $pesan, $notifSetting->template_name ?? null, $templateParams);
             if ($isSent) {
                 $tx->update(['terkirim' => 'terkirim']);
                 $successCount++;

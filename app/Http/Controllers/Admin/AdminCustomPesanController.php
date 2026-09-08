@@ -26,6 +26,9 @@ class AdminCustomPesanController extends Controller
         $request->validate([
             'status' => 'required|string',
             'pesan_notifikasi' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_notif')->first();
@@ -33,11 +36,17 @@ class AdminCustomPesanController extends Controller
             DB::table('tbl_notif')->update([
                 'status_notifikasi' => $request->status,
                 'pesan_notifikasi' => $request->pesan_notifikasi,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         } else {
             DB::table('tbl_notif')->insert([
                 'status_notifikasi' => $request->status,
                 'pesan_notifikasi' => $request->pesan_notifikasi,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         }
 
@@ -48,16 +57,25 @@ class AdminCustomPesanController extends Controller
     {
         $request->validate([
             'pesan_bayar' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_notifbayar')->first();
         if ($exists) {
             DB::table('tbl_notifbayar')->update([
                 'pesan_bayar' => $request->pesan_bayar,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         } else {
             DB::table('tbl_notifbayar')->insert([
                 'pesan_bayar' => $request->pesan_bayar,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         }
 
@@ -69,6 +87,9 @@ class AdminCustomPesanController extends Controller
         $request->validate([
             'status_npemasangan' => 'required|string',
             'pesan_npemasangan' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_npemasangan')->first();
@@ -76,11 +97,17 @@ class AdminCustomPesanController extends Controller
             DB::table('tbl_npemasangan')->update([
                 'status_notif' => $request->status_npemasangan,
                 'pesan_notif' => $request->pesan_npemasangan,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         } else {
             DB::table('tbl_npemasangan')->insert([
                 'status_notif' => $request->status_npemasangan,
                 'pesan_notif' => $request->pesan_npemasangan,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         }
 
@@ -92,12 +119,18 @@ class AdminCustomPesanController extends Controller
         $request->validate([
             'status_blokir' => 'required|string',
             'pesan_blokir' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_blokir')->first();
         $data = [
             'status_blokir' => $request->status_blokir,
             'pesan_blokir' => $request->pesan_blokir,
+            'template_name' => $request->template_name,
+            'template_params' => $request->template_params,
+            'template_language' => $request->template_language ?? 'id',
         ];
 
         if ($exists) {
@@ -113,16 +146,25 @@ class AdminCustomPesanController extends Controller
     {
         $request->validate([
             'pesan_bukablokir' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_bukablokir')->first();
         if ($exists) {
             DB::table('tbl_bukablokir')->update([
                 'pesan_bukablokir' => $request->pesan_bukablokir,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         } else {
             DB::table('tbl_bukablokir')->insert([
                 'pesan_bukablokir' => $request->pesan_bukablokir,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         }
 
@@ -134,6 +176,9 @@ class AdminCustomPesanController extends Controller
         $request->validate([
             'status_reminder' => 'required|string',
             'pesan_reminder' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_notifreminder')->first();
@@ -141,11 +186,17 @@ class AdminCustomPesanController extends Controller
             DB::table('tbl_notifreminder')->update([
                 'status_reminder' => $request->status_reminder,
                 'pesan_reminder' => $request->pesan_reminder,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         } else {
             DB::table('tbl_notifreminder')->insert([
                 'status_reminder' => $request->status_reminder,
                 'pesan_reminder' => $request->pesan_reminder,
+                'template_name' => $request->template_name,
+                'template_params' => $request->template_params,
+                'template_language' => $request->template_language ?? 'id',
             ]);
         }
 
@@ -157,12 +208,18 @@ class AdminCustomPesanController extends Controller
         $request->validate([
             'status_promo' => 'required|string',
             'pesan_promo' => 'required|string',
+            'template_name' => 'nullable|string',
+            'template_params' => 'nullable|string',
+            'template_language' => 'nullable|string',
         ]);
 
         $exists = DB::table('tbl_notifpromo')->first();
         $data = [
             'status_promo' => $request->status_promo,
             'pesan_promo' => $request->pesan_promo,
+            'template_name' => $request->template_name,
+            'template_params' => $request->template_params,
+            'template_language' => $request->template_language ?? 'id',
             'updated_at' => now(),
         ];
 

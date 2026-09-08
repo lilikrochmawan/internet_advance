@@ -352,9 +352,14 @@
             <i class="fa-solid fa-users"></i>
             <span>Daftar Pelanggan Billing Internet</span>
         </div>
-        <button class="btn btn-primary" onclick="openAddModal()">
-            <i class="fa-solid fa-plus"></i> Tambah Pelanggan
-        </button>
+        <div class="actions" style="display: flex; gap: 10px;">
+            <a href="{{ route('admin.pelanggan.export') }}" class="btn btn-success">
+                <i class="fa-solid fa-file-excel"></i> Export Kontak WA
+            </a>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <i class="fa-solid fa-plus"></i> Tambah Pelanggan
+            </button>
+        </div>
     </div>
 
     <!-- Pilihan device mikrotik untuk sinkronisasi -->
