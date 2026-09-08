@@ -47,8 +47,30 @@ class BablastWebhookController extends Controller
         // Standarisasi nomor telepon
         $from = preg_replace('/[^0-9]/', '', $from);
         
-        // Extract Media URL if present
-        $mediaUrl = $payload['data']['url'] ?? $payload['data']['media_url'] ?? $payload['data']['message']['image']['link'] ?? $payload['data']['message']['document']['link'] ?? $payload['url'] ?? $payload['media'] ?? null;
+        // Extract Media URL if present. Prioritize HTTP links.
+        $mediaUrls = [
+            $payload['data']['media_url'] ?? null,
+            $payload['data']['file_url'] ?? null,
+            $payload['data']['message']['image']['link'] ?? null,
+            $payload['data']['message']['document']['link'] ?? null,
+            $payload['url'] ?? null,
+            $payload['media'] ?? null,
+            $payload['data']['url'] ?? null,
+        ];
+        
+        $mediaUrl = null;
+        foreach ($mediaUrls as $url) {
+            if ($url && is_string($url) && str_starts_with(strtolower($url), 'http')) {
+                $mediaUrl = $url;
+                break;
+            }
+        }
+        
+        // Fallback if no HTTP url found
+        if (!$mediaUrl) {
+            $mediaUrl = $payload['data']['url'] ?? $payload['data']['media_url'] ?? null;
+        }
+
         if (empty($messageText) && $mediaUrl) {
             $messageText = '[Gambar/Media]';
         }

@@ -107,6 +107,10 @@ class AdminWabaChatController extends Controller
             return abort(404, 'URL media tidak ditemukan.');
         }
 
+        if (!str_starts_with($url, 'http')) {
+            return abort(400, 'Format URL media tidak didukung (bukan HTTP). URL: ' . htmlspecialchars($url));
+        }
+
         // Ambil token dari Fonnte / WABA
         $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
         if (!$tokenInfo) {
