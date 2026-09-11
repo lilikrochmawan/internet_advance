@@ -857,11 +857,15 @@
                 </div>
 
                 <div id="bablast_config" style="display: {{ ($token->wa_gateway ?? '') === 'bablast' ? 'block' : 'none' }};">
-                    <div class="form-group">
+                    <div id="bablast_settings" class="gateway-settings">
                         <label for="bablast_token">Token API Bablast (Bearer) *</label>
                         <input type="text" id="bablast_token" name="bablast_token" class="form-control" value="{{ $token->bablast_token ?? '' }}" placeholder="Masukkan API Key Bablast Anda">
-                        <small style="color:var(--text-gray); margin-top:4px;">Gunakan API Key WABA resmi dari panel Bablast.</small>
+                        <small class="form-text text-muted">Contoh: in1ghmCSnnFTza75JETP9...</small>
+                        <br>
+                        <label for="bablast_media_token" class="mt-2">Token API Bablast (Media) *</label>
+                        <input type="text" id="bablast_media_token" name="bablast_media_token" class="form-control" value="{{ $token->bablast_media_token ?? '' }}" placeholder="Masukkan Token untuk Download Media Bablast">
                     </div>
+                    <small style="color:var(--text-gray); margin-top:4px;">Gunakan API Key WABA resmi dari panel Bablast.</small>
                 </div>
 
                 <div style="display:flex; justify-content:flex-end; margin-top:20px;">

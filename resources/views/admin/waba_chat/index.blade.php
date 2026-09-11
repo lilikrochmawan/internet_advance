@@ -155,8 +155,28 @@
         padding: 16px 24px;
         background: #f0f2f5;
         display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .chat-input-controls {
+        display: flex;
         gap: 12px;
         align-items: flex-end;
+        width: 100%;
+    }
+    .file-preview {
+        display: none;
+        background: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+    .file-preview-close {
+        cursor: pointer;
+        color: #ef4444;
     }
     .chat-textarea {
         flex: 1;
@@ -257,10 +277,20 @@
         </div>
         
         <div class="chat-input-area">
-            <textarea id="chat-input" class="chat-textarea" rows="1" placeholder="Ketik pesan balasan... (Tekan Enter untuk mengirim, Shift+Enter untuk baris baru)"></textarea>
-            <button id="btn-send-reply" class="btn-send" onclick="sendReply()">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
+            <div id="file-preview-container" class="file-preview">
+                <i class="fa-solid fa-file"></i> <span id="file-preview-name"></span>
+                <i class="fa-solid fa-times file-preview-close" onclick="clearFile()"></i>
+            </div>
+            <div class="chat-input-controls">
+                <button type="button" class="btn btn-light" style="border-radius: 50%; width: 45px; height: 45px; flex-shrink: 0;" onclick="document.getElementById('chat-file').click()">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+                <input type="file" id="chat-file" style="display: none;" onchange="handleFileSelect(this)" accept="image/*,application/pdf,video/mp4">
+                <textarea id="chat-input" class="chat-textarea" rows="1" placeholder="Ketik pesan balasan..."></textarea>
+                <button id="btn-send-reply" class="btn-send" onclick="sendReply()">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
     </div>
     
@@ -342,49 +372,69 @@
             });
     }
 
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            document.getElementById('file-preview-name').innerText = file.name;
+            document.getElementById('file-preview-container').style.display = 'flex';
+        }
+    }
+
+    function clearFile() {
+        document.getElementById('chat-file').value = '';
+        document.getElementById('file-preview-container').style.display = 'none';
+        document.getElementById('file-preview-name').innerText = '';
+    }
+
     function sendReply() {
-        const input = document.getElementById('chat-input');
-        const pesan = input.value.trim();
         const no_telp = document.getElementById('current_no_telp').value;
-        const csrfToken = document.querySelector('input[name="_token"]').value;
+        const pesan = document.getElementById('chat-input').value.trim();
+        const fileInput = document.getElementById('chat-file');
+        
+        if (!no_telp) return;
+        if (!pesan && (!fileInput.files || fileInput.files.length === 0)) return;
+
         const btnSend = document.getElementById('btn-send-reply');
-        
-        if (!pesan || !no_telp) return;
-        
-        // Disable input while sending
-        input.disabled = true;
         btnSend.disabled = true;
-        
+        btnSend.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        const formData = new FormData();
+        formData.append('no_telp', no_telp);
+        formData.append('pesan', pesan);
+        if (fileInput.files && fileInput.files[0]) {
+            formData.append('media', fileInput.files[0]);
+        }
+        formData.append('_token', '{{ csrf_token() }}');
+
         fetch(`{{ route('admin.waba_chat.reply') }}`, {
             method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify({ no_telp, pesan })
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         .then(res => res.json())
         .then(data => {
-            if (data.status === 'success') {
-                input.value = '';
-                appendMessage(data.message);
-                scrollToBottom();
-                
-                // Update side list
-                const sideListMsg = document.querySelector(`#contact-${no_telp} .contact-msg`);
-                if (sideListMsg) sideListMsg.innerText = pesan;
+            btnSend.disabled = false;
+            btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+            if (data.success || data.status === 'success') {
+                document.getElementById('chat-input').value = '';
+                clearFile();
+                if (data.data) {
+                    appendMessage(data.data);
+                    scrollToBottom();
+                } else if (data.message && data.message.tipe) {
+                    appendMessage(data.message);
+                    scrollToBottom();
+                }
             } else {
-                alert('Gagal mengirim pesan.');
+                alert('Gagal mengirim pesan');
             }
         })
         .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan jaringan.');
-        })
-        .finally(() => {
-            input.disabled = false;
             btnSend.disabled = false;
-            input.focus();
+            btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+            alert('Terjadi kesalahan jaringan');
         });
     }
     

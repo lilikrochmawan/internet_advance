@@ -61,24 +61,37 @@ class AdminDashboardController extends Controller
 
         // 2. Status Pelanggan (Aktif, Terisolir, Non-aktif)
         $totalPelanggan = count($allowedPelangganIds);
-        $terisolirCount = Tagihan::whereNull('status_bayar')
-            ->where('blokir_status', 1)
+        
+        $latestTagihans = Tagihan::select('id_pelanggan', 'status_bayar', 'jatuh_tempo', 'blokir_status')
             ->whereIn('id_pelanggan', $allowedPelangganIds)
-            ->distinct('id_pelanggan')
-            ->count('id_pelanggan');
+            ->whereIn('id_tagihan', function($query) {
+                $query->selectRaw('MAX(id_tagihan)')
+                      ->from('tb_tagihan')
+                      ->groupBy('id_pelanggan');
+            })
+            ->get();
 
-        $bukaSementaraCount = Tagihan::whereNull('status_bayar')
+        $terisolirCount = 0;
+        $nonaktifCount = 0;
+
+        foreach ($latestTagihans as $t) {
+            $isUnpaid = is_null($t->status_bayar) || in_array($t->status_bayar, [0, '0', 'belum', ''], true);
+            if ($isUnpaid) {
+                if ($t->blokir_status == 1) {
+                    $terisolirCount++;
+                } elseif ($t->jatuh_tempo && Carbon::parse($t->jatuh_tempo)->diffInDays(Carbon::now(), false) > 60) {
+                    $nonaktifCount++;
+                }
+            }
+        }
+        
+        $bukaSementaraCount = Tagihan::where(function($q) {
+                $q->whereNull('status_bayar')->orWhereIn('status_bayar', [0, '0', 'belum', '']);
+            })
             ->where('jatuh_tempo', '<', Carbon::now())
             ->where(function($q) {
                 $q->whereNull('blokir_status')->orWhere('blokir_status', '!=', 1);
             })
-            ->whereIn('id_pelanggan', $allowedPelangganIds)
-            ->distinct('id_pelanggan')
-            ->count('id_pelanggan');
-
-        // Non-aktif: Pelanggan yang nunggak > 60 hari
-        $nonaktifCount = Tagihan::whereNull('status_bayar')
-            ->where('jatuh_tempo', '<', Carbon::now()->subDays(60))
             ->whereIn('id_pelanggan', $allowedPelangganIds)
             ->distinct('id_pelanggan')
             ->count('id_pelanggan');

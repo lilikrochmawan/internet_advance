@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\AdminPaketController;
 use App\Http\Controllers\Admin\AdminPromoController;
 use App\Http\Controllers\Admin\AdminTransaksiController;
 use App\Http\Controllers\Admin\AdminKasController;
+use App\Http\Controllers\Admin\AdminRiwayatTransaksiController;
 use App\Http\Controllers\Admin\AdminKeluhanController;
 use App\Http\Controllers\Admin\AdminPenggunaController;
 use App\Http\Controllers\Admin\AdminPengaturanController;
@@ -115,6 +116,10 @@ Route::prefix('administrator')->group(function () {
         Route::post('/kas', [AdminKasController::class, 'store'])->name('admin.kas.store');
         Route::post('/kas/update', [AdminKasController::class, 'update'])->name('admin.kas.update');
         Route::post('/kas/delete', [AdminKasController::class, 'destroy'])->name('admin.kas.destroy');
+
+        // Riwayat Transaksi
+        Route::get('/riwayat-transaksi', [AdminRiwayatTransaksiController::class, 'index'])->name('admin.riwayat_transaksi.index');
+        Route::get('/riwayat-transaksi/laporan', [AdminRiwayatTransaksiController::class, 'laporan'])->name('admin.riwayat_transaksi.laporan');
 
         // Keluhan
         Route::get('/keluhan', [AdminKeluhanController::class, 'index'])->name('admin.keluhan.index');

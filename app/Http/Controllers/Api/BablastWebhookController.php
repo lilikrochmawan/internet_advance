@@ -34,6 +34,9 @@ class BablastWebhookController extends Controller
 
     private function handleIncomingMessage(array $payload)
     {
+        // LOG FULL PAYLOAD FOR DEBUGGING MEDIA
+        file_put_contents(storage_path('logs/bablast_payload.log'), json_encode($payload) . "\n\n", FILE_APPEND);
+
         // Ekstrak pengirim dan pesan
         // Bablast WABA payload format
         $from = $payload['data']['from_phone'] ?? $payload['data']['from'] ?? $payload['from'] ?? $payload['phone'] ?? null;

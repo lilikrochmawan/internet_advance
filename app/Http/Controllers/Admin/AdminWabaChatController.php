@@ -70,33 +70,45 @@ class AdminWabaChatController extends Controller
     {
         $request->validate([
             'no_telp' => 'required|string',
-            'pesan' => 'required|string'
+            'pesan' => 'nullable|string',
+            'media' => 'nullable|file|mimes:jpeg,png,jpg,pdf,mp4|max:10240'
         ]);
         
         $no_telp = $request->input('no_telp');
-        $pesan = $request->input('pesan');
+        $pesan = $request->input('pesan') ?? '';
         
         // Find name if possible
         $shortPhone = substr($no_telp, -9);
         $pelanggan = Pelanggan::where('no_telp', 'like', "%{$shortPhone}%")->first();
         $nama = $pelanggan ? $pelanggan->nama_pelanggan : 'Tidak Dikenal';
         
+        $mediaUrl = null;
+        if ($request->hasFile('media')) {
+            $file = $request->file('media');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/chat'), $filename);
+            $mediaUrl = asset('uploads/chat/' . $filename);
+        }
+
         // Send using WA Service
         $waService = app(WhatsAppService::class);
-        $response = $waService->sendMessage($no_telp, $pesan);
+        $response = $waService->sendMessage($no_telp, $pesan, $mediaUrl);
         
         // Save to DB
         $chat = WabaChat::create([
             'no_telp' => $no_telp,
             'nama' => $nama,
             'pesan' => $pesan,
+            'media_url' => $mediaUrl,
             'tipe' => 'outgoing',
             'status' => 'sent',
+            'read_status' => 1
         ]);
         
         return response()->json([
-            'status' => 'success',
-            'message' => $chat
+            'success' => true,
+            'message' => 'Pesan terkirim',
+            'data' => $chat
         ]);
     }
 
@@ -104,17 +116,16 @@ class AdminWabaChatController extends Controller
     {
         $url = $request->query('url');
         if (!$url) {
-            return abort(404, 'URL media tidak ditemukan.');
+            return $this->returnPlaceholderSvg('URL media tidak ditemukan.');
         }
 
         if (!str_starts_with($url, 'http')) {
-            return abort(400, 'Format URL media tidak didukung (bukan HTTP). URL: ' . htmlspecialchars($url));
+            return $this->returnPlaceholderSvg('Format Media WABA Terkunci');
         }
 
-        // Ambil token dari Fonnte / WABA
         $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
         if (!$tokenInfo) {
-            return abort(403, 'Token WhatsApp belum dikonfigurasi.');
+            return $this->returnPlaceholderSvg('Token Gateway Belum Dikonfigurasi');
         }
 
         try {
@@ -125,11 +136,29 @@ class AdminWabaChatController extends Controller
             if ($response->successful()) {
                 return response($response->body(), 200)
                     ->header('Content-Type', $response->header('Content-Type'));
+            } else if ($response->status() == 401) {
+                return $this->returnPlaceholderSvg('Akses Ditolak (Token Meta Tidak Valid)');
             } else {
-                return abort($response->status(), 'Gagal mengambil gambar dari server asal.');
+                return $this->returnPlaceholderSvg('Gagal Mengunduh Media (Status: ' . $response->status() . ')');
             }
         } catch (\Exception $e) {
-            return abort(500, 'Terjadi kesalahan saat memuat media: ' . $e->getMessage());
+            return $this->returnPlaceholderSvg('Koneksi Gagal: ' . substr($e->getMessage(), 0, 50));
         }
+    }
+
+    private function returnPlaceholderSvg($message)
+    {
+        $svg = '<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#f8d7da"/>
+  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="16" fill="#721c24" text-anchor="middle" dominant-baseline="middle">
+    ' . htmlspecialchars($message) . '
+  </text>
+  <text x="50%" y="70%" font-family="Arial, sans-serif" font-size="12" fill="#721c24" text-anchor="middle" dominant-baseline="middle">
+    (Hubungi Penyedia Layanan / Bablast)
+  </text>
+</svg>';
+
+        return response($svg, 200)->header('Content-Type', 'image/svg+xml');
     }
 }

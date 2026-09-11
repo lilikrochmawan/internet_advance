@@ -1160,9 +1160,36 @@
                 </li>
             @endif
 
-            @if(Auth::user()->hasMenuAccess('kas'))
-                <li class="sidebar-menu-item {{ $currRoute == 'admin.kas.index' ? 'active' : '' }}">
-                    <a href="{{ route('admin.kas.index') }}"><i class="fa-solid fa-money-bill-transfer"></i><span>Kas Masuk/Keluar</span></a>
+            @if(Auth::user()->hasMenuAccess('kas') || Auth::user()->hasMenuAccess('transaksi'))
+                @php
+                    $isKasActive = Str::startsWith($currRoute, 'admin.kas') || $currRoute == 'admin.riwayat_transaksi.index';
+                @endphp
+                <li class="sidebar-menu-item has-submenu {{ $isKasActive ? 'active open' : '' }}">
+                    <a href="javascript:void(0)" class="submenu-toggle">
+                        <span class="submenu-label">
+                            <i class="fa-solid fa-book"></i>
+                            <span>Buku Kas</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        @if(Auth::user()->hasMenuAccess('kas'))
+                        <li class="submenu-item {{ $currRoute == 'admin.kas.index' ? 'active' : '' }}">
+                            <a href="{{ route('admin.kas.index') }}">
+                                <i class="fa-solid fa-money-bill-transfer"></i>
+                                <span>Kas Masuk & Keluar</span>
+                            </a>
+                        </li>
+                        @endif
+                        @if(Auth::user()->hasMenuAccess('transaksi'))
+                        <li class="submenu-item {{ $currRoute == 'admin.riwayat_transaksi.index' ? 'active' : '' }}">
+                            <a href="{{ route('admin.riwayat_transaksi.index') }}">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <span>Riwayat Transaksi</span>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
                 </li>
             @endif
 
@@ -1922,6 +1949,60 @@
             })();
         </script>
     @endif
+
+    <script>
+        function addCustomMapToggle(map, streetsLayer, satelliteLayer) {
+            var currentLayer = 'streets';
+            
+            var LayerToggleControl = L.Control.extend({
+                options: { position: 'bottomleft' },
+                onAdd: function (map) {
+                    var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                    container.style.width = '60px';
+                    container.style.height = '60px';
+                    container.style.backgroundColor = 'white';
+                    container.style.backgroundImage = 'url("https://mt1.google.com/vt/lyrs=y&x=105&y=66&z=7")';
+                    container.style.backgroundSize = 'cover';
+                    container.style.borderRadius = '8px';
+                    container.style.border = '2px solid white';
+                    container.style.cursor = 'pointer';
+                    container.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+                    container.style.display = 'flex';
+                    container.style.alignItems = 'flex-end';
+                    container.style.justifyContent = 'center';
+                    container.style.paddingBottom = '4px';
+                    container.style.fontWeight = '600';
+                    container.style.color = 'white';
+                    container.style.fontFamily = 'Outfit, sans-serif';
+                    container.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)';
+                    
+                    container.innerHTML = '<span style="font-size: 11px;"><i class="fa-solid fa-layer-group"></i> Satelit</span>';
+
+                    container.onclick = function() {
+                        if (currentLayer === 'streets') {
+                            map.removeLayer(streetsLayer);
+                            satelliteLayer.addTo(map);
+                            currentLayer = 'satellite';
+                            container.style.backgroundImage = 'url("https://mt1.google.com/vt/lyrs=m&x=105&y=66&z=7")';
+                            container.innerHTML = '<span style="font-size: 11px;"><i class="fa-solid fa-layer-group"></i> Map</span>';
+                        } else {
+                            map.removeLayer(satelliteLayer);
+                            streetsLayer.addTo(map);
+                            currentLayer = 'streets';
+                            container.style.backgroundImage = 'url("https://mt1.google.com/vt/lyrs=y&x=105&y=66&z=7")';
+                            container.innerHTML = '<span style="font-size: 11px;"><i class="fa-solid fa-layer-group"></i> Satelit</span>';
+                        }
+                    };
+
+                    L.DomEvent.disableClickPropagation(container);
+                    return container;
+                }
+            });
+
+            map.addControl(new LayerToggleControl());
+        }
+    </script>
+
     @yield('scripts')
 </body>
 </html>

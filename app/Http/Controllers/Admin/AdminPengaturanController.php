@@ -133,6 +133,7 @@ class AdminPengaturanController extends Controller
             'wa_gateway' => 'required|in:fonnte,bablast',
             'token' => 'nullable|string',
             'bablast_token' => 'nullable|string',
+            'bablast_media_token' => 'nullable|string',
         ]);
 
         $status = $request->has('status') ? 'aktif' : 'nonaktif';
@@ -141,6 +142,7 @@ class AdminPengaturanController extends Controller
             'wa_gateway' => htmlspecialchars(strip_tags($request->wa_gateway)),
             'token' => $request->token ? htmlspecialchars(strip_tags($request->token)) : null,
             'bablast_token' => $request->bablast_token ? htmlspecialchars(strip_tags($request->bablast_token)) : null,
+            'bablast_media_token' => $request->bablast_media_token ? htmlspecialchars(strip_tags($request->bablast_media_token)) : null,
             'status' => $status,
         ]);
 
