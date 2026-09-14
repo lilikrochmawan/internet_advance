@@ -290,10 +290,11 @@
 
 <!-- TOP 10 Menunggak -->
 <div class="card">
-    <div class="card-header">
-        <h3>Top 10 Pelanggan Menunggak</h3>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleTop10()">
+        <h3 style="margin: 0;">Top 10 Pelanggan Menunggak</h3>
+        <span id="top10Icon" style="font-size: 1.2rem; color: #64748b; transition: transform 0.3s;">▼</span>
     </div>
-    <div class="card-body" style="padding: 0;">
+    <div class="card-body" id="top10Body" style="padding: 0; display: none;">
         <div class="table-container" style="margin-top: 0;">
             <table class="table">
                 <thead>
@@ -434,7 +435,7 @@
                     <label for="lap_bulan" style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Bulan</label>
                     <select id="lap_bulan" class="form-control">
                         @for($i=1; $i<=12; $i++)
-                            <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" {{ date('m') == $i ? 'selected' : '' }}>{{ date('F', mktime(0,0,0,$i,1)) }}</option>
+                            <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" {{ date('m') == $i ? 'selected' : '' }}>{{ \Carbon\Carbon::create()->month($i)->translatedFormat('F') }}</option>
                         @endfor
                     </select>
                 </div>
@@ -472,6 +473,18 @@
 </div>
 
 <script>
+    function toggleTop10() {
+        const body = document.getElementById('top10Body');
+        const icon = document.getElementById('top10Icon');
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            body.style.display = 'none';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
     function openLaporanModal() {
         document.getElementById('laporanModal').classList.add('active');
         loadLaporan();

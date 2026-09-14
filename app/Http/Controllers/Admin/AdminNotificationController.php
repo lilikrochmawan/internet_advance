@@ -18,7 +18,8 @@ class AdminNotificationController extends Controller
         $odps = Odp::orderBy('nama_odp', 'asc')->get();
         $odcs = DB::table('tbl_odc')->orderBy('nama_odc', 'asc')->get();
         $announcements = Informasi::orderBy('id_informasi', 'desc')->take(5)->get();
-        return view('admin.notification.index', compact('odps', 'announcements', 'odcs'));
+        $profile = DB::table('tb_profile')->first();
+        return view('admin.notification.index', compact('odps', 'announcements', 'odcs', 'profile'));
     }
 
     public function getOdpClients($id)
@@ -74,6 +75,13 @@ class AdminNotificationController extends Controller
         if (in_array('wa', $channels)) {
             set_time_limit(1800);
 
+        if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+            DB::table('tb_profile')->update([
+                'waba_broadcast_template' => $request->waba_template,
+                'waba_broadcast_params' => $request->waba_params ?? '',
+            ]);
+        }
+
             $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->where('status', 'aktif')->first();
             if (!$tokenInfo || empty($tokenInfo->token)) {
                 return response()->json([
@@ -100,7 +108,7 @@ class AdminNotificationController extends Controller
             foreach ($pelangganList as $index => $pelanggan) {
                 // Jeda pengiriman 10 detik (kecuali pesan pertama)
                 if ($index > 0) {
-                    sleep(10);
+                    // sleep(10);
                 }
 
                 // Format dinamis jika menggunakan tag nama
@@ -111,7 +119,32 @@ class AdminNotificationController extends Controller
                 );
 
                 $waService = app(\App\Services\WhatsAppService::class);
-                $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+                $isSent = false;
+                if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+                    $templateParams = [];
+                    if (!empty($request->waba_params)) {
+                        $paramsList = explode(',', $request->waba_params);
+                        foreach ($paramsList as $param) {
+                            $param = trim($param);
+                            if ($param === 'nama') {
+                                $templateParams[] = $pelanggan->nama_pelanggan;
+                            } elseif ($param === '$pesan') {
+                                $templateParams[] = $customPesan;
+                            } else {
+                                $templateParams[] = $param;
+                            }
+                        }
+                    }
+                    $isSent = $waService->sendTemplateMessage(
+                    $pelanggan->no_telp,
+                    $customPesan,
+                    $request->waba_template,
+                    $templateParams,
+                    'id'
+                );
+                } else {
+                    $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+                }
                 if ($isSent) {
                     $berhasil++;
                     $results[] = [
@@ -155,6 +188,13 @@ class AdminNotificationController extends Controller
 
         set_time_limit(1800);
 
+        if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+            DB::table('tb_profile')->update([
+                'waba_broadcast_template' => $request->waba_template,
+                'waba_broadcast_params' => $request->waba_params ?? '',
+            ]);
+        }
+
         $id_odp = $request->input('id_odp');
         $pesan = $request->input('pesan');
         $client_ids = $request->input('client_ids');
@@ -188,7 +228,7 @@ class AdminNotificationController extends Controller
         foreach ($pelangganList as $index => $pelanggan) {
             // Jeda pengiriman 10 detik (kecuali pesan pertama)
             if ($index > 0) {
-                sleep(10);
+                // sleep(10);
             }
 
             // Format dinamis
@@ -199,7 +239,36 @@ class AdminNotificationController extends Controller
             );
 
             $waService = app(\App\Services\WhatsAppService::class);
-            $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            $isSent = false;
+            if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+                $templateParams = [];
+                if (!empty($request->waba_params)) {
+                    $paramsList = explode(',', $request->waba_params);
+                    foreach ($paramsList as $param) {
+                        $param = trim($param);
+                        if ($param === 'nama') {
+                            $templateParams[] = $pelanggan->nama_pelanggan;
+                        } elseif ($param === '$pesan') {
+                            $templateParams[] = $customPesan;
+                        } elseif ($param === 'odp') {
+                            $templateParams[] = $odp->nama_odp ?? $odpName ?? '';
+                        } elseif ($param === 'odc') {
+                            $templateParams[] = $odc->nama_odc ?? '';
+                        } else {
+                            $templateParams[] = $param;
+                        }
+                    }
+                }
+                $isSent = $waService->sendTemplateMessage(
+                    $pelanggan->no_telp,
+                    $customPesan,
+                    $request->waba_template,
+                    $templateParams,
+                    'id'
+                );
+            } else {
+                $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            }
             if ($isSent) {
                 $berhasil++;
                 $results[] = [
@@ -237,6 +306,13 @@ class AdminNotificationController extends Controller
         ]);
 
         set_time_limit(1800);
+
+        if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+            DB::table('tb_profile')->update([
+                'waba_broadcast_template' => $request->waba_template,
+                'waba_broadcast_params' => $request->waba_params ?? '',
+            ]);
+        }
 
         $id_odc = $request->input('id_odc');
         $pesan = $request->input('pesan');
@@ -278,7 +354,7 @@ class AdminNotificationController extends Controller
         foreach ($pelangganList as $index => $pelanggan) {
             // Jeda pengiriman 10 detik (kecuali pesan pertama)
             if ($index > 0) {
-                sleep(10);
+                // sleep(10);
             }
 
             // Format dinamis
@@ -290,7 +366,36 @@ class AdminNotificationController extends Controller
             );
 
             $waService = app(\App\Services\WhatsAppService::class);
-            $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            $isSent = false;
+            if ($request->has('use_waba') && $request->use_waba === 'on' && !empty($request->waba_template)) {
+                $templateParams = [];
+                if (!empty($request->waba_params)) {
+                    $paramsList = explode(',', $request->waba_params);
+                    foreach ($paramsList as $param) {
+                        $param = trim($param);
+                        if ($param === 'nama') {
+                            $templateParams[] = $pelanggan->nama_pelanggan;
+                        } elseif ($param === '$pesan') {
+                            $templateParams[] = $customPesan;
+                        } elseif ($param === 'odp') {
+                            $templateParams[] = $odp->nama_odp ?? $odpName ?? '';
+                        } elseif ($param === 'odc') {
+                            $templateParams[] = $odc->nama_odc ?? '';
+                        } else {
+                            $templateParams[] = $param;
+                        }
+                    }
+                }
+                $isSent = $waService->sendTemplateMessage(
+                    $pelanggan->no_telp,
+                    $customPesan,
+                    $request->waba_template,
+                    $templateParams,
+                    'id'
+                );
+            } else {
+                $isSent = $waService->sendMessage($pelanggan->no_telp, $customPesan);
+            }
             if ($isSent) {
                 $berhasil++;
                 $results[] = [

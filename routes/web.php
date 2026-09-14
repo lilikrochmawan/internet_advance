@@ -208,6 +208,7 @@ Route::prefix('administrator')->group(function () {
         Route::post('/custom-pesan/bukablokir', [AdminCustomPesanController::class, 'updateBukaBlokir'])->name('admin.custom_pesan.bukablokir');
         Route::post('/custom-pesan/reminder', [AdminCustomPesanController::class, 'updateReminder'])->name('admin.custom_pesan.reminder');
         Route::post('/custom-pesan/promo', [AdminCustomPesanController::class, 'updatePromo'])->name('admin.custom_pesan.promo');
+        Route::get('/custom-pesan/fetch-waba-image', [AdminCustomPesanController::class, 'fetchWabaImage'])->name('admin.custom_pesan.fetch_waba_image');
         
         // Webhook Template
         Route::get('/webhook-template', [App\Http\Controllers\Admin\AdminWebhookTemplateController::class, 'index'])->name('admin.webhook_template.index');

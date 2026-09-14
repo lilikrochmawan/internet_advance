@@ -1061,9 +1061,9 @@
 
 
 
-            @if(Auth::user()->hasMenuAccess('custom_pesan'))
+            @if(Auth::user()->hasMenuAccess('custom_pesan') || Auth::user()->hasMenuAccess('broadcast'))
                 @php
-                    $isWhatsappActive = in_array($currRoute, ['admin.custom_pesan.index', 'admin.waba_chat.index', 'admin.webhook_template.index']);
+                    $isWhatsappActive = in_array($currRoute, ['admin.custom_pesan.index', 'admin.waba_chat.index', 'admin.webhook_template.index']) || Str::startsWith($currRoute, 'admin.broadcast');
                 @endphp
                 <li class="sidebar-menu-item has-submenu {{ $isWhatsappActive ? 'active open' : '' }}">
                     <a href="javascript:void(0)" class="submenu-toggle">
@@ -1074,6 +1074,7 @@
                         <i class="fa-solid fa-chevron-down submenu-arrow"></i>
                     </a>
                     <ul class="submenu">
+                        @if(Auth::user()->hasMenuAccess('custom_pesan'))
                         <li class="submenu-item {{ $currRoute == 'admin.waba_chat.index' ? 'active' : '' }}">
                             <a href="{{ route('admin.waba_chat.index') }}">
                                 <i class="fa-solid fa-message"></i>
@@ -1095,13 +1096,17 @@
                                 <span>Auto-Reply Webhook</span>
                             </a>
                         </li>
+                        @endif
+                        
+                        @if(Auth::user()->hasMenuAccess('broadcast'))
+                        <li class="submenu-item {{ Str::startsWith($currRoute, 'admin.broadcast') ? 'active' : '' }}">
+                            <a href="{{ route('admin.broadcast.index') }}">
+                                <i class="fa-solid fa-bullhorn"></i>
+                                <span>Broadcast Notifikasi</span>
+                            </a>
+                        </li>
+                        @endif
                     </ul>
-                </li>
-            @endif
-
-            @if(Auth::user()->hasMenuAccess('broadcast'))
-                <li class="sidebar-menu-item {{ Str::startsWith($currRoute, 'admin.broadcast') ? 'active' : '' }}">
-                    <a href="{{ route('admin.broadcast.index') }}"><i class="fa-solid fa-bullhorn"></i><span>Broadcast Notifikasi</span></a>
                 </li>
             @endif
 

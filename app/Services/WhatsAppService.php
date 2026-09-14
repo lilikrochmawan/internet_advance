@@ -67,37 +67,9 @@ class WhatsAppService
             }
 
             if ($mediaUrl) {
-                $ext = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
-                $type = 'image';
-                if (in_array($ext, ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) {
-                    $type = 'document';
-                } elseif (in_array($ext, ['mp4', 'avi', 'mov'])) {
-                    $type = 'video';
-                }
-                
-                $mediaObj = [
-                    'type' => $type,
-                    $type => ['link' => $mediaUrl]
-                ];
-                array_unshift($parameters, $mediaObj);
-            } else {
-                if (isset($parameters[0]) && is_string($parameters[0]) && filter_var($parameters[0], FILTER_VALIDATE_URL)) {
-                    $ext = strtolower(pathinfo(parse_url($parameters[0], PHP_URL_PATH), PATHINFO_EXTENSION));
-                    $type = 'image';
-                    if (in_array($ext, ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) {
-                        $type = 'document';
-                    } elseif (in_array($ext, ['mp4', 'avi', 'mov'])) {
-                        $type = 'video';
-                    }
-                    
-                    $parameters[0] = [
-                        'type' => $type,
-                        $type => ['link' => $parameters[0]]
-                    ];
-                } else {
-                    \Illuminate\Support\Facades\Log::info("WA Bablast: parameter[0] is not a valid URL or not set. Data: " . json_encode($parameters));
-                }
+                array_unshift($parameters, $mediaUrl);
             }
+
             return $this->sendTemplateViaBablast($target, $templateName, $parameters, $tokenInfo->bablast_token, $language);
         } else {
             // Fallback to normal text message for Fonnte or if template name is empty
@@ -193,12 +165,56 @@ class WhatsAppService
         }
 
         try {
+            $components = [];
+            $bodyStartIndex = 0;
+
+            if (isset($parameters[0]) && is_string($parameters[0]) && filter_var($parameters[0], FILTER_VALIDATE_URL)) {
+                $ext = strtolower(pathinfo(parse_url($parameters[0], PHP_URL_PATH), PATHINFO_EXTENSION));
+                $type = 'image';
+                if (in_array($ext, ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) {
+                    $type = 'document';
+                } elseif (in_array($ext, ['mp4', 'avi', 'mov'])) {
+                    $type = 'video';
+                }
+                
+                $components[] = [
+                    'type' => 'header',
+                    'parameters' => [
+                        [
+                            'type' => $type,
+                            $type => ['link' => $parameters[0]]
+                        ]
+                    ]
+                ];
+                $bodyStartIndex = 1;
+            }
+
+            $bodyParams = [];
+            for ($i = $bodyStartIndex; $i < count($parameters); $i++) {
+                if (is_string($parameters[$i])) {
+                    $bodyParams[] = ['type' => 'text', 'text' => $parameters[$i]];
+                }
+            }
+
+            if (count($bodyParams) > 0) {
+                $components[] = [
+                    'type' => 'body',
+                    'parameters' => $bodyParams
+                ];
+            }
+
             $payload = [
                 'phone' => $target,
                 'template_name' => $templateName,
                 'language' => $language,
-                'parameters' => $parameters, // Bablast supports flat array e.g. ["Budi", "Rp 150.000"]
             ];
+
+            if (!empty($components)) {
+                $payload['components'] = $components;
+            } else {
+                $payload['parameters'] = $parameters;
+            }
+            
             \Illuminate\Support\Facades\Log::info("Sending to Bablast: " . json_encode($payload));
 
             $response = Http::withHeaders([

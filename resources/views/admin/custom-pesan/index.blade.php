@@ -144,7 +144,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $notif->template_params ?? '' }}" placeholder="cth: nama, tagihan, jatuh_tempo">
                         <small style="color: #64748b; display: block; margin-top: 4px;">Ketikkan nama variabel dari daftar di bawah sesuai urutan <b>{{1}}, {{2}}</b> di template Meta.</small>
                     </div>
@@ -223,7 +223,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $reminder->template_params ?? '' }}" placeholder="cth: nama, tagihan">
                     </div>
                 </div>
@@ -293,7 +293,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $blokir->template_params ?? '' }}" placeholder="cth: nama, tagihan">
                     </div>
                 </div>
@@ -352,7 +352,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $notifbayar->template_params ?? '' }}" placeholder="cth: nama, tagihan">
                     </div>
                 </div>
@@ -410,7 +410,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $bukablokir->template_params ?? '' }}" placeholder="cth: nama, tagihan">
                     </div>
                 </div>
@@ -478,7 +478,7 @@
                     </div>
 
                     <div>
-                        <label style="font-size: 0.9rem; font-weight:600;">Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></label>
+                        <label style="font-size: 0.9rem; font-weight:600; display:flex; justify-content:space-between; align-items:center;"><span>Urutan Variabel Template <span style="font-weight:normal; color:#64748b;">(pisahkan dengan koma)</span></span><button type="button" class="btn btn-sm btn-outline-info" onclick="fetchWabaImage(this)" style="font-size:11px; padding:2px 8px;" title="Cari link gambar header dari Meta">Cari Link Gambar Header</button></label>
                         <input type="text" name="template_params" class="form-control" value="{{ $promo->template_params ?? '' }}" placeholder="cth: nama, tagihan">
                     </div>
                 </div>
@@ -555,5 +555,48 @@
             });
         });
     });
+
+    window.fetchWabaImage = function(btn) {
+        let container = btn.closest('div').parentElement;
+        let templateInput = container.querySelector('input[name="template_name"]');
+        if(!templateInput) {
+            templateInput = btn.closest('.card-body').querySelector('input[name="template_name"]');
+        }
+        let templateName = templateInput ? templateInput.value.trim() : '';
+        if(!templateName) {
+            alert('Silakan isi "Nama Template" terlebih dahulu agar sistem tahu template mana yang harus dicari.');
+            return;
+        }
+
+        let oldText = btn.innerHTML;
+        btn.innerHTML = 'Mencari...';
+        btn.disabled = true;
+
+        fetch('{{ route("admin.custom_pesan.fetch_waba_image") }}?template_name=' + encodeURIComponent(templateName))
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    let paramsInput = btn.closest('label').nextElementSibling;
+                    if(paramsInput && paramsInput.name === 'template_params') {
+                        let currentVal = paramsInput.value.trim();
+                        if(!currentVal.includes('http')) {
+                            paramsInput.value = res.link + (currentVal ? ',' + currentVal : '');
+                            alert('Link gambar berhasil ditemukan dari server Bablast dan otomatis ditambahkan ke depan parameter Anda!');
+                        } else {
+                            prompt('Link gambar ditemukan. Anda sepertinya sudah memasukkan link. Jika ingin menggantinya, gunakan link ini:', res.link);
+                        }
+                    } else {
+                        prompt('Link gambar berhasil ditemukan:', res.link);
+                    }
+                } else {
+                    alert('Gagal: ' + res.message);
+                }
+            })
+            .catch(e => alert('Terjadi kesalahan jaringan saat mencoba menghubungi server Bablast.'))
+            .finally(() => {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            });
+    }
 </script>
 @endsection

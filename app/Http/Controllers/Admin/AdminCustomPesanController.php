@@ -232,4 +232,46 @@ class AdminCustomPesanController extends Controller
 
         return redirect()->route('admin.custom_pesan.index')->with('success', 'Pesan template Promo WhatsApp berhasil diperbarui!');
     }
+    public function fetchWabaImage(Request $request)
+    {
+        $templateName = $request->get('template_name');
+        if (!$templateName) {
+            return response()->json(['success' => false, 'message' => 'Nama template tidak diberikan']);
+        }
+
+        $tokenInfo = DB::table('tbl_token')->where('id_token', 1)->first();
+        if (!$tokenInfo || empty($tokenInfo->bablast_token)) {
+            return response()->json(['success' => false, 'message' => 'Token Bablast belum diatur']);
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Bearer ' . $tokenInfo->bablast_token,
+                'Content-Type' => 'application/json'
+            ])->get('https://api.bablast.id/waba/templates');
+
+            $data = $response->json();
+            if(isset($data['data'])) {
+                foreach($data['data'] as $tpl) {
+                    if ($tpl['name'] === $templateName) {
+                        foreach ($tpl['components'] as $comp) {
+                            if ($comp['type'] === 'HEADER' && $comp['format'] === 'IMAGE') {
+                                if (isset($comp['example']['header_handle'][0])) {
+                                    return response()->json([
+                                        'success' => true, 
+                                        'link' => $comp['example']['header_handle'][0]
+                                    ]);
+                                }
+                            }
+                        }
+                        return response()->json(['success' => false, 'message' => 'Template ini tidak memiliki header gambar di server Meta.']);
+                    }
+                }
+                return response()->json(['success' => false, 'message' => 'Template tidak ditemukan di server Bablast.']);
+            }
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil data dari server Bablast.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }

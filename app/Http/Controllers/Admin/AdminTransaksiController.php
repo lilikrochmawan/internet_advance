@@ -991,7 +991,7 @@ class AdminTransaksiController extends Controller
 
             // Jeda 10 detik untuk mencegah rate limit/spam block (kecuali indeks pertama)
             if ($index > 0) {
-                sleep(10);
+                // sleep(10);
             }
 
             $pesan = $notifSetting->pesan_notifikasi;
@@ -1105,7 +1105,7 @@ class AdminTransaksiController extends Controller
 
             // Jeda 10 detik untuk mencegah rate limit/spam block (kecuali indeks pertama)
             if ($index > 0) {
-                sleep(10);
+                // sleep(10);
             }
 
             $pesan = $reminderSetting->pesan_reminder;
@@ -1283,7 +1283,7 @@ class AdminTransaksiController extends Controller
                 if ($blokirSetting && $blokirSetting->status_blokir === 'aktif' && $tokenInfo && !empty($tokenInfo->token) && !empty($pelanggan->no_telp)) {
                     // Jeda 10 detik jika ini bukan pengiriman pertama
                     if ($successCount > 0) {
-                        sleep(10);
+                        // sleep(10);
                     }
 
                     $pesan = $blokirSetting->pesan_blokir;
