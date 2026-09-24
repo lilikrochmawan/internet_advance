@@ -615,4 +615,29 @@ class PaymentController extends Controller
 
         return response('OK', 200);
     }
+
+    public function printInvoice($id)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $pelanggan = $user->pelanggan;
+        
+        if (!$pelanggan) {
+            abort(404, 'Pelanggan tidak ditemukan.');
+        }
+
+        $pelangganIds = $this->tagihanService->getPelangganIdsByPhone($pelanggan->no_telp);
+
+        $tagihan = \App\Models\Tagihan::with(['pelanggan.paketDetail'])->whereIn('id_pelanggan', $pelangganIds)->findOrFail($id);
+
+        $profile = \Illuminate\Support\Facades\DB::table('tb_profile')->first();
+        if ($profile && !isset($profile->telepon)) {
+            $profile->telepon = $profile->telpon ?? '';
+        }
+
+        if (empty($tagihan->no_invoice)) {
+            $tagihan->no_invoice = 'INV/' . $tagihan->bulan_tahun . '/' . str_pad($tagihan->id_tagihan, 4, '0', STR_PAD_LEFT);
+        }
+
+        return view('admin.transaksi.print_invoice', compact('tagihan', 'profile'));
+    }
 }
