@@ -447,6 +447,28 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    function renderMessageStatus(msg) {
+        if (msg.tipe !== 'outgoing') {
+            return '';
+        }
+
+        const status = (msg.status || 'sent').toLowerCase();
+
+        if (status === 'read') {
+            // Centang 2 Biru (Sudah dibaca)
+            return '<i class="fa-solid fa-check-double" style="color: #53bdeb; margin-left: 5px; font-size: 0.85rem;" title="Sudah Dibaca"></i>';
+        } else if (status === 'delivered') {
+            // Centang 2 Abu-abu (Terkirim & Diterima di perangkat)
+            return '<i class="fa-solid fa-check-double" style="color: #8696a0; margin-left: 5px; font-size: 0.85rem;" title="Terkirim & Diterima"></i>';
+        } else if (status === 'failed') {
+            // Gagal Terkirim
+            return '<i class="fa-solid fa-circle-exclamation" style="color: #ef4444; margin-left: 5px; font-size: 0.8rem;" title="Gagal Terkirim"></i>';
+        } else {
+            // Centang 1 Abu-abu (Pesan terkirim, belum diterima)
+            return '<i class="fa-solid fa-check" style="color: #8696a0; margin-left: 5px; font-size: 0.85rem;" title="Pesan Terkirim (Belum Diterima)"></i>';
+        }
+    }
+
     function appendMessage(msg) {
         const isIncoming = msg.tipe === 'incoming';
         const bubbleClass = isIncoming ? 'msg-incoming' : 'msg-outgoing';
@@ -470,7 +492,8 @@
         }
         
         const safePesan = (msg.pesan || '').replace(/\\n/g, '<br>');
-        bubble.innerHTML = `${mediaHtml}<div style="word-wrap: break-word;">${safePesan}</div><span class="msg-time" title="${formatFullDateTime(msg.created_at)}"><i class="fa-regular fa-clock" style="font-size: 0.65rem; opacity: 0.6; margin-right: 3px;"></i>${formatTimeWithDate(msg.created_at)}</span>`;
+        const statusHtml = renderMessageStatus(msg);
+        bubble.innerHTML = `${mediaHtml}<div style="word-wrap: break-word;">${safePesan}</div><span class="msg-time" title="${formatFullDateTime(msg.created_at)}"><i class="fa-regular fa-clock" style="font-size: 0.65rem; opacity: 0.6; margin-right: 3px;"></i>${formatTimeWithDate(msg.created_at)}${statusHtml}</span>`;
         
         document.getElementById('chat-messages').appendChild(bubble);
     }
